@@ -23,11 +23,11 @@ export async function POST(request: NextRequest) {
       data: {
         caseId: createdCase.id,
         victimEmail: caseData.victimEmail,
-        assignedAgentId: "550e8400-e29b-41d4-a716-446655440001",
+        assignedAgentId: null,
       },
     })
 
-    const formspreeEndpoint = process.env.FORMSPREE_URL
+    const formspreeEndpoint = process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT || process.env.FORMSPREE_URL
 
     if (formspreeEndpoint) {
       try {

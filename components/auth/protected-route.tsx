@@ -13,7 +13,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredRole, redirectTo = "/login" }: ProtectedRouteProps) {
-  const { user, profile, isLoading } = useAuth()
+  const { user, isLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -23,14 +23,13 @@ export function ProtectedRoute({ children, requiredRole, redirectTo = "/login" }
         return
       }
 
-      if (requiredRole && profile && profile.role !== requiredRole) {
-        // Redirect to appropriate dashboard based on role
-        const dashboardPath = profile.role === "reviewer" ? "/reviewer" : "/dashboard"
+      if (requiredRole && user && (user as any).role && (user as any).role !== requiredRole) {
+        const dashboardPath = (user as any).role === "reviewer" ? "/reviewer" : "/dashboard"
         router.push(dashboardPath)
         return
       }
     }
-  }, [user, profile, isLoading, requiredRole, redirectTo, router])
+  }, [user, isLoading, requiredRole, redirectTo, router])
 
   if (isLoading) {
     return (
@@ -40,7 +39,7 @@ export function ProtectedRoute({ children, requiredRole, redirectTo = "/login" }
     )
   }
 
-  if (!user || !profile || (requiredRole && profile.role !== requiredRole)) {
+  if (!user || (requiredRole && (user as any).role !== requiredRole)) {
     return null
   }
 

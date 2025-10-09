@@ -122,9 +122,8 @@ export const OTPEmailTemplate = ({
       <p style="margin: 4px 0;">&copy; ${new Date().getFullYear()} Fortivault. All rights reserved.</p>
       <p style="margin: 4px 0;">Fortivault, Inc. | Confidential & Secure Communication</p>
       <p style="margin: 4px 0;">
-        <a href="mailto:Fortivault@aol.com" style="color:#1e40af; text-decoration:none;">support@fortivault</a> | 
-        <a href="mailto:Fortivault@aol.com" style="color:#1e40af; text-decoration:none;">inquiries@fortivault.>
-        </a>
+        <a href="mailto:services.fortivault@gmx.us" style="color:#1e40af; text-decoration:none;">services.fortivault@gmx.us</a> |
+        <a href="mailto:services.fortivault@gmx.us" style="color:#1e40af; text-decoration:none;">services.fortivault@gmx.us</a>
       </p>
       <a href="https://www.instagram.com/fortivault1?igsh=Yjl0NDF0ZnRzd2Jr" target="_blank" style="display:inline-block; margin-top:10px;">
         <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" style="width:24px; height:24px;">
