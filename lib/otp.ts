@@ -20,8 +20,11 @@ function fromBase64url(input: string): Buffer {
 }
 
 function getSecret(): string {
-  const secret = process.env.NEXTAUTH_SECRET || "development-secret"
-  return secret
+  const secret = process.env.NEXTAUTH_SECRET
+  if (process.env.NODE_ENV === "production" && !secret) {
+    throw new Error("NEXTAUTH_SECRET must be set in production")
+  }
+  return secret || "development-secret"
 }
 
 export function generateOTP(length = 6): string {
