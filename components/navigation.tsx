@@ -5,7 +5,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { useAuth } from "@/hooks/use-auth"
 import { Menu, LogOut, User } from "lucide-react"
 import {
   DropdownMenu,
@@ -17,7 +16,6 @@ import {
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
-  const { user, logout } = useAuth()
 
   const navItems = [
     { href: "/", label: "Home" },
@@ -55,43 +53,11 @@ export function Navigation() {
         <div className="flex items-center space-x-4">
           <ThemeToggle />
 
-          {user ? (
-            <div className="flex items-center space-x-2">
-              <Button asChild variant="outline" className="hidden md:inline-flex bg-transparent">
-                <Link href={user.role === "reviewer" ? "/reviewer" : "/dashboard"}>
-                  {user.role === "reviewer" ? "Reviewer Dashboard" : "My Dashboard"}
-                </Link>
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <User className="h-5 w-5" />
-                    <span className="sr-only">User menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link href={user.role === "reviewer" ? "/reviewer" : "/dashboard"}>Dashboard</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ) : (
-            <div className="hidden md:flex items-center space-x-2">
-              <Button variant="outline" asChild>
-                <Link href="/login">Sign In</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/report">Report a Case</Link>
-              </Button>
-            </div>
-          )}
+          <div className="hidden md:flex items-center space-x-2">
+            <Button asChild>
+              <Link href="/report">Report a Case</Link>
+            </Button>
+          </div>
 
           {/* Mobile Navigation */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -114,41 +80,11 @@ export function Navigation() {
                   </Link>
                 ))}
 
-                {user ? (
-                  <>
-                    <Button asChild className="mt-4">
-                      <Link
-                        href={user.role === "reviewer" ? "/reviewer" : "/dashboard"}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Dashboard
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        logout()
-                        setIsOpen(false)
-                      }}
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button variant="outline" asChild>
-                      <Link href="/login" onClick={() => setIsOpen(false)}>
-                        Sign In
-                      </Link>
-                    </Button>
-                    <Button asChild className="mt-4">
-                      <Link href="/report" onClick={() => setIsOpen(false)}>
-                        Report a Case
-                      </Link>
-                    </Button>
-                  </>
-                )}
+                <Button asChild className="mt-4">
+                  <Link href="/report" onClick={() => setIsOpen(false)}>
+                    Report a Case
+                  </Link>
+                </Button>
               </div>
             </SheetContent>
           </Sheet>
