@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, FormEvent } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -70,56 +70,38 @@ export function FraudReportingWizard() {
     }
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
     setIsSubmitting(true)
 
+    const formData = new FormData()
+    formData.append("form-name", "fraud-report")
+    formData.append("scamType", data.scamType)
+    formData.append("amount", data.amount)
+    formData.append("currency", data.currency)
+    formData.append("timeline", data.timeline)
+    formData.append("description", data.description)
+    formData.append("contactEmail", data.contactEmail)
+    formData.append("contactPhone", data.contactPhone)
+    formData.append("transactionHashes", JSON.stringify(data.transactionHashes))
+    formData.append("bankReferences", JSON.stringify(data.bankReferences))
+
+    data.evidenceFiles.forEach((file, index) => {
+      formData.append(`evidenceFile_${index}`, file)
+    })
+
     try {
-      // Generate case ID
-      const generatedCaseId = `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
-      setCaseId(generatedCaseId)
-
-      // Prepare form data
-      const formData = new FormData()
-
-      // Add all form fields
-      formData.append("caseId", generatedCaseId)
-      formData.append("scamType", data.scamType)
-      formData.append("amount", data.amount)
-      formData.append("currency", data.currency)
-      formData.append("timeline", data.timeline)
-      formData.append("description", data.description)
-      formData.append("contactEmail", data.contactEmail)
-      formData.append("contactPhone", data.contactPhone)
-      formData.append("transactionHashes", JSON.stringify(data.transactionHashes))
-      formData.append("bankReferences", JSON.stringify(data.bankReferences))
-      formData.append("submissionDate", new Date().toISOString())
-
-      // Add evidence files
-      data.evidenceFiles.forEach((file, index) => {
-        formData.append(`evidenceFile_${index}`, file)
-      })
-      formData.append("evidenceFileCount", data.evidenceFiles.length.toString())
-
-      const response = await fetch("/api/submit-case", {
+      const response = await fetch("/", {
         method: "POST",
         body: formData,
       })
 
-      const result = await response.json()
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to submit form")
+      if (!response.ok) {
+        throw new Error("Form submission failed")
       }
 
-      const caseData = {
-        caseId: generatedCaseId,
-        status: "Intake",
-        submissionDate: new Date().toISOString(),
-        ...data,
-      }
-      localStorage.setItem(`case_${generatedCaseId}`, JSON.stringify(caseData))
-      localStorage.setItem("activeCaseId", generatedCaseId)
-
+      const generatedCaseId = `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+      setCaseId(generatedCaseId)
       setIsSubmitted(true)
     } catch (error) {
       console.error("Form submission error:", error)
@@ -153,55 +135,84 @@ export function FraudReportingWizard() {
   const progress = ((currentStep + 1) / steps.length) * 100
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl">
-              Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}
-            </CardTitle>
-            <div className="text-sm text-muted-foreground">{Math.round(progress)}% Complete</div>
+    <form
+      name="fraud-report"
+      method="POST"
+      data-netlify="true"
+      data-netlify-honeypot="bot-field"
+      onSubmit={handleSubmit}
+    >
+      <input type="hidden" name="form-name" value="fraud-report" />
+      <p className="hidden">
+        <label>
+          Don’t fill this out if you’re human: <input name="bot-field" />
+        </label>
+      </p>
+
+      {/* Hidden inputs for all form fields for Netlify */}
+      <input type="hidden" name="scamType" value={data.scamType} />
+      <input type="hidden" name="amount" value={data.amount} />
+      <input type="hidden" name="currency" value={data.currency} />
+      <input type="hidden" name="timeline" value={data.timeline} />
+      <textarea name="description" value={data.description} className="hidden" />
+      <input type="hidden" name="transactionHashes" value={JSON.stringify(data.transactionHashes)} />
+      <input type="hidden" name="bankReferences" value={JSON.stringify(data.bankReferences)} />
+      <input type="hidden" name="contactEmail" value={data.contactEmail} />
+      <input type="hidden" name="contactPhone" value={data.contactPhone} />
+      {/* Netlify needs to see a file input. We can have a hidden one. */}
+      <input type="file" name="evidenceFiles" className="hidden" multiple />
+
+
+      <Card className="w-full">
+        <CardHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl">
+                Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}
+              </CardTitle>
+              <div className="text-sm text-muted-foreground">{Math.round(progress)}% Complete</div>
+            </div>
+            <Progress value={progress} className="w-full" />
+            <p className="text-muted-foreground">{steps[currentStep].description}</p>
           </div>
-          <Progress value={progress} className="w-full" />
-          <p className="text-muted-foreground">{steps[currentStep].description}</p>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
-      <CardContent className="space-y-6">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {currentStep === 0 && <ScamTypeStep data={data} updateData={updateData} />}
-            {currentStep === 1 && <DetailsStep data={data} updateData={updateData} />}
-            {currentStep === 2 && <TransactionStep data={data} updateData={updateData} />}
-            {currentStep === 3 && <EvidenceStep data={data} updateData={updateData} />}
-            {currentStep === 4 && <ConfirmationStep data={data} updateData={updateData} />}
-          </motion.div>
-        </AnimatePresence>
+        <CardContent className="space-y-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {currentStep === 0 && <ScamTypeStep data={data} updateData={updateData} />}
+              {currentStep === 1 && <DetailsStep data={data} updateData={updateData} />}
+              {currentStep === 2 && <TransactionStep data={data} updateData={updateData} />}
+              {currentStep === 3 && <EvidenceStep data={data} updateData={updateData} />}
+              {currentStep === 4 && <ConfirmationStep data={data} updateData={updateData} />}
+            </motion.div>
+          </AnimatePresence>
 
-        <div className="flex justify-between pt-6 border-t">
-          <Button variant="outline" onClick={prevStep} disabled={currentStep === 0}>
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Previous
-          </Button>
-
-          {currentStep === steps.length - 1 ? (
-            <Button onClick={handleSubmit} disabled={!canProceed() || isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Submit Report"}
+          <div className="flex justify-between pt-6 border-t">
+            <Button variant="outline" onClick={prevStep} disabled={currentStep === 0}>
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Previous
             </Button>
-          ) : (
-            <Button onClick={nextStep} disabled={!canProceed()}>
-              Next
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+
+            {currentStep === steps.length - 1 ? (
+              <Button type="submit" disabled={!canProceed() || isSubmitting}>
+                {isSubmitting ? "Submitting..." : "Submit Report"}
+              </Button>
+            ) : (
+              <Button type="button" onClick={nextStep} disabled={!canProceed()}>
+                Next
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </form>
   )
 }

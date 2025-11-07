@@ -1,14 +1,12 @@
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { ReviewerDashboard } from "@/components/reviewer-dashboard"
-import { ProtectedRoute } from "@/components/auth/protected-route"
 
 export default function ReviewerPage() {
   return (
-    <ProtectedRoute requiredRole="reviewer">
-      <div className="min-h-screen">
-        <Navigation />
-        <main className="py-8">
+    <div className="min-h-screen">
+      <Navigation />
+      <main className="py-8">
           <div className="container px-4 mx-auto">
             <div className="max-w-7xl mx-auto">
               <div className="mb-8">
@@ -23,6 +21,5 @@ export default function ReviewerPage() {
         </main>
         <Footer />
       </div>
-    </ProtectedRoute>
   )
 }
