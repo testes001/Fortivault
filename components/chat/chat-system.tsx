@@ -110,7 +110,7 @@ export function ChatSystem({ caseId, isAgentOnline = true }: ChatSystemProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Avatar>
-              <AvatarImage src="/professional-woman-agent.png" />
+              <AvatarImage src="/professional-woman-agent.png" alt="Agent Sarah Martinez" />
               <AvatarFallback>SM</AvatarFallback>
             </Avatar>
             <div>
@@ -124,13 +124,13 @@ export function ChatSystem({ caseId, isAgentOnline = true }: ChatSystemProps) {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" aria-label="Start voice call">
               <Phone className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" aria-label="Start video call">
               <Video className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" aria-label="More options">
               <MoreVertical className="w-4 h-4" />
             </Button>
           </div>
