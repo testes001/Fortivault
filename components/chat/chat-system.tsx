@@ -157,7 +157,7 @@ export function ChatSystem({ caseId, isAgentOnline = true }: ChatSystemProps) {
                     {message.sender === "agent" && (
                       <div className="flex items-center space-x-2 mb-1">
                         <Avatar className="w-6 h-6">
-                          <AvatarImage src="/professional-woman-agent.png" />
+                          <AvatarImage src="/professional-woman-agent.png" alt="Agent Sarah Martinez" />
                           <AvatarFallback className="text-xs">SM</AvatarFallback>
                         </Avatar>
                         <span className="text-xs font-medium">{message.agentName}</span>
@@ -188,7 +188,7 @@ export function ChatSystem({ caseId, isAgentOnline = true }: ChatSystemProps) {
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
                 <div className="flex items-center space-x-2">
                   <Avatar className="w-6 h-6">
-                    <AvatarImage src="/professional-woman-agent.png" />
+                    <AvatarImage src="/professional-woman-agent.png" alt="Agent Sarah Martinez typing" />
                     <AvatarFallback className="text-xs">SM</AvatarFallback>
                   </Avatar>
                   <div className="bg-muted rounded-lg px-4 py-2">
@@ -214,7 +214,7 @@ export function ChatSystem({ caseId, isAgentOnline = true }: ChatSystemProps) {
 
       <div className="border-t p-4">
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" aria-label="Attach file">
             <Paperclip className="w-4 h-4" />
           </Button>
           <Input
@@ -223,8 +223,9 @@ export function ChatSystem({ caseId, isAgentOnline = true }: ChatSystemProps) {
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && sendMessage()}
             className="flex-1"
+            aria-label="Chat message input"
           />
-          <Button onClick={sendMessage} disabled={!newMessage.trim()}>
+          <Button onClick={sendMessage} disabled={!newMessage.trim()} aria-label="Send message">
             <Send className="w-4 h-4" />
           </Button>
         </div>
