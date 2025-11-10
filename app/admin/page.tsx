@@ -51,7 +51,10 @@ export default function AdminPage() {
     e.preventDefault()
     setLoginError("")
 
-    if (email === "super@admin.com" && password === "Admin001") {
+    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@fortivault.com"
+    const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || ""
+
+    if (email === adminEmail && password === adminPassword) {
       setIsAuthenticated(true)
       localStorage.setItem("adminAuth", "true")
       loadCases()
