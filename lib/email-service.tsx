@@ -1,5 +1,3 @@
-import nodemailer from "nodemailer"
-
 interface EmailOptions {
   to: string
   subject: string
@@ -8,35 +6,51 @@ interface EmailOptions {
 }
 
 class EmailService {
-  private transporter: nodemailer.Transporter
+  private apiKey: string
+  private fromEmail: string
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number.parseInt(process.env.SMTP_PORT || "587"),
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    })
+    this.apiKey = process.env.RESEND_API_KEY || ""
+    this.fromEmail = process.env.RESEND_FROM_EMAIL || "noreply@fortivault.com"
+
+    if (!this.apiKey) {
+      console.warn(
+        "[Fortivault] RESEND_API_KEY is not configured. Email sending will fail. Please set RESEND_API_KEY in your environment variables.",
+      )
+    }
   }
 
   async sendEmail({ to, subject, html, text }: EmailOptions) {
     try {
-      const info = await this.transporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.EMAIL_FROM,
-        to,
-        subject,
-        html,
-        text: text || html.replace(/<[^>]*>/g, ""), // Strip HTML for text version
+      if (!this.apiKey) {
+        throw new Error("RESEND_API_KEY is not configured")
+      }
+
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          from: this.fromEmail,
+          to,
+          subject,
+          html,
+          text: text || html.replace(/<[^>]*>/g, ""),
+        }),
       })
 
-      console.log("[v0] Email sent successfully:", info.messageId)
-      return { success: true, messageId: info.messageId }
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`Resend API error: ${errorData.message || response.statusText}`)
+      }
+
+      const data = await response.json()
+      return { success: true, messageId: data.id }
     } catch (error) {
-      console.error("[v0] Email sending failed:", error)
-      return { success: false, error: error.message }
+      console.error("[Fortivault] Email sending failed:", error)
+      return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
     }
   }
 
@@ -124,7 +138,7 @@ class EmailService {
         
         <div style="text-align: center; padding: 20px; color: #64748b; font-size: 12px;">
           <p>Fortivault | Built to protect. Trusted to Secure | 24/7 Support Available</p>
-          <p>Need help? Reply to this email or contact services.fortivault@gmx.us</p>
+          <p>Need help? Reply to this email or contact support@fortivault.com</p>
         </div>
       </div>
     `
