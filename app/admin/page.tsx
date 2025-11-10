@@ -190,7 +190,7 @@ export default function AdminPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter admin password"
+                  placeholder="Enter your admin password"
                   required
                 />
               </div>
