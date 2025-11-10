@@ -58,53 +58,53 @@ export function CasesList({ cases, selectedCase, onSelectCase }: CasesListProps)
   return (
     <div className="space-y-3 max-h-96 overflow-y-auto">
       {cases.map((caseItem) => (
-        <Card
+        <button
           key={caseItem.id}
-          className={`cursor-pointer transition-all hover:shadow-md ${
+          onClick={() => onSelectCase(caseItem)}
+          className={`w-full text-left bg-card border rounded-md p-4 transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background ${
             selectedCase?.id === caseItem.id ? "ring-2 ring-primary bg-primary/5" : ""
           }`}
-          onClick={() => onSelectCase(caseItem)}
+          aria-pressed={selectedCase?.id === caseItem.id}
+          aria-label={`Select case ${caseItem.id}`}
         >
-          <CardContent className="p-4">
-            <div className="space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-medium text-sm">{caseItem.id}</p>
-                  <p className="text-xs text-muted-foreground">{caseItem.victimName}</p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Badge className={getPriorityColor(caseItem.priority)} variant="secondary">
-                    {caseItem.priority}
-                  </Badge>
-                  <Badge className={getStatusColor(caseItem.status)} variant="secondary">
-                    {getStatusLabel(caseItem.status)}
-                  </Badge>
-                </div>
+          <div className="space-y-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-medium text-sm">{caseItem.id}</p>
+                <p className="text-xs text-muted-foreground">{caseItem.victimName}</p>
               </div>
-
-              <div className="space-y-1">
-                <p className="text-sm font-medium">{caseItem.type}</p>
-                <p className="text-sm text-muted-foreground">
-                  {caseItem.amount} {caseItem.currency}
-                </p>
+              <div className="flex flex-col gap-1">
+                <Badge className={getPriorityColor(caseItem.priority)} variant="secondary">
+                  {caseItem.priority}
+                </Badge>
+                <Badge className={getStatusColor(caseItem.status)} variant="secondary">
+                  {getStatusLabel(caseItem.status)}
+                </Badge>
               </div>
+            </div>
 
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Updated {new Date(caseItem.lastUpdate).toLocaleDateString()}</span>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1">
-                    <FileText className="w-3 h-3" />
-                    <span>{caseItem.evidenceCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageCircle className="w-3 h-3" />
-                    <span>{caseItem.messageCount}</span>
-                  </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium">{caseItem.type}</p>
+              <p className="text-sm text-muted-foreground">
+                {caseItem.amount} {caseItem.currency}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Updated {new Date(caseItem.lastUpdate).toLocaleDateString()}</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <FileText className="w-3 h-3" />
+                  <span>{caseItem.evidenceCount}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <MessageCircle className="w-3 h-3" />
+                  <span>{caseItem.messageCount}</span>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </button>
       ))}
     </div>
   )

@@ -67,36 +67,36 @@ export function AdminCaseList({ cases, selectedCase, onSelectCase, onUpdateStatu
           </div>
         ) : (
           cases.map((caseItem) => (
-            <Card
+            <button
               key={caseItem.id}
-              className={`cursor-pointer transition-all hover:shadow-md ${
+              onClick={() => onSelectCase(caseItem)}
+              className={`w-full text-left bg-card border rounded-md p-3 transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background ${
                 selectedCase?.id === caseItem.id ? "ring-2 ring-primary bg-primary/5" : ""
               }`}
-              onClick={() => onSelectCase(caseItem)}
+              aria-pressed={selectedCase?.id === caseItem.id}
+              aria-label={`Select case ${caseItem.id}`}
             >
-              <CardContent className="p-3">
-                <div className="space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-medium text-sm">{caseItem.id}</p>
-                      <p className="text-xs text-muted-foreground">{caseItem.type}</p>
-                    </div>
-                    <Badge className={getPriorityColor(caseItem.priority)} variant="secondary">
-                      {caseItem.priority}
-                    </Badge>
+              <div className="space-y-2">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-medium text-sm">{caseItem.id}</p>
+                    <p className="text-xs text-muted-foreground">{caseItem.type}</p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium">
-                      {caseItem.amount} {caseItem.currency}
-                    </span>
-                    <Badge className={getStatusColor(caseItem.status)} variant="secondary">
-                      {caseItem.status.replace("-", " ")}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate">{caseItem.contactEmail}</p>
+                  <Badge className={getPriorityColor(caseItem.priority)} variant="secondary">
+                    {caseItem.priority}
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium">
+                    {caseItem.amount} {caseItem.currency}
+                  </span>
+                  <Badge className={getStatusColor(caseItem.status)} variant="secondary">
+                    {caseItem.status.replace("-", " ")}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground truncate">{caseItem.contactEmail}</p>
+              </div>
+            </button>
           ))
         )}
       </CardContent>

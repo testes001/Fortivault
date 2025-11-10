@@ -162,14 +162,16 @@ export function UserDashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               {activeCases.map((caseItem) => (
-                <Card
+                <button
                   key={caseItem.id}
-                  className={`cursor-pointer transition-all hover:shadow-md ${
+                  onClick={() => setSelectedCase(caseItem)}
+                  className={`w-full text-left bg-card border rounded-md transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background ${
                     selectedCase?.id === caseItem.id ? "ring-2 ring-primary bg-primary/5" : ""
                   }`}
-                  onClick={() => setSelectedCase(caseItem)}
+                  aria-pressed={selectedCase?.id === caseItem.id}
+                  aria-label={`Select case ${caseItem.id}`}
                 >
-                  <CardContent className="p-4">
+                  <div className="p-4">
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div>
@@ -190,8 +192,8 @@ export function UserDashboard() {
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-2">{caseItem.description}</p>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </button>
               ))}
             </CardContent>
           </Card>

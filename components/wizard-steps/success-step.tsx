@@ -35,13 +35,19 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
 
         const result = await response.json()
         if (result.success) {
-          console.log("[v0] OTP sent successfully")
+          if (process.env.NODE_ENV === "development") {
+            console.log("[Fortivault] OTP sent successfully")
+          }
           setShowVerification(true)
         } else {
-          console.error("[v0] Failed to send OTP:", result.error)
+          if (process.env.NODE_ENV === "development") {
+            console.error("[Fortivault] Failed to send OTP:", result.error)
+          }
         }
       } catch (error) {
-        console.error("[v0] OTP sending error:", error)
+        if (process.env.NODE_ENV === "development") {
+          console.error("[Fortivault] OTP sending error:", error)
+        }
       }
     }
 
@@ -72,6 +78,9 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
       const result = await response.json()
 
       if (result.success) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("[Fortivault] Email verified successfully")
+        }
         setIsVerifying(false)
         setIsVerified(true)
         setShowProgress(true)
@@ -103,7 +112,9 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
         setVerificationCode("")
       }
     } catch (error) {
-      console.error("[v0] Verification error:", error)
+      if (process.env.NODE_ENV === "development") {
+        console.error("[Fortivault] Verification error:", error)
+      }
       setIsVerifying(false)
       alert("Verification failed. Please try again.")
     }
@@ -229,13 +240,16 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
                 </p>
 
                 <div className="space-y-3">
+                  <label htmlFor="verification-code" className="sr-only">6-digit verification code</label>
                   <input
+                    id="verification-code"
                     type="text"
                     placeholder="Enter 6-digit code"
                     value={verificationCode}
                     onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     className="w-full text-center text-lg font-mono tracking-widest border rounded-lg p-3"
                     maxLength={6}
+                    aria-label="6-digit verification code"
                   />
 
                   <Button
