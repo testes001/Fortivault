@@ -100,7 +100,7 @@ export function AgentChatSystem({ caseId, victimName, isVictimOnline = false }: 
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Avatar>
-              <AvatarImage src="/placeholder.svg?key=victim" />
+              <AvatarImage src="/placeholder.svg?key=victim" alt="Victim" />
               <AvatarFallback>
                 {victimName
                   .split(" ")
@@ -119,13 +119,13 @@ export function AgentChatSystem({ caseId, victimName, isVictimOnline = false }: 
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" aria-label="Start voice call">
               <Phone className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" aria-label="Start video call">
               <Video className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" aria-label="More options">
               <MoreVertical className="w-4 h-4" />
             </Button>
           </div>
@@ -152,7 +152,7 @@ export function AgentChatSystem({ caseId, victimName, isVictimOnline = false }: 
                     {message.sender === "user" && (
                       <div className="flex items-center space-x-2 mb-1">
                         <Avatar className="w-6 h-6">
-                          <AvatarImage src="/placeholder.svg?key=victim2" />
+                          <AvatarImage src="/placeholder.svg?key=victim2" alt="Victim" />
                           <AvatarFallback className="text-xs">
                             {victimName
                               .split(" ")
@@ -173,7 +173,7 @@ export function AgentChatSystem({ caseId, victimName, isVictimOnline = false }: 
                         </Badge>
                         <span className="text-xs font-medium">Sarah Martinez</span>
                         <Avatar className="w-6 h-6">
-                          <AvatarImage src="/placeholder.svg?key=agent" />
+                          <AvatarImage src="/placeholder.svg?key=agent" alt="Support Agent" />
                           <AvatarFallback className="text-xs">SM</AvatarFallback>
                         </Avatar>
                       </div>
@@ -200,7 +200,7 @@ export function AgentChatSystem({ caseId, victimName, isVictimOnline = false }: 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
                 <div className="flex items-center space-x-2">
                   <Avatar className="w-6 h-6">
-                    <AvatarImage src="/placeholder.svg?key=victim3" />
+                    <AvatarImage src="/placeholder.svg?key=victim3" alt="Victim" />
                     <AvatarFallback className="text-xs">
                       {victimName
                         .split(" ")
@@ -231,7 +231,7 @@ export function AgentChatSystem({ caseId, victimName, isVictimOnline = false }: 
 
       <div className="border-t p-4">
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" aria-label="Attach file">
             <Paperclip className="w-4 h-4" />
           </Button>
           <Input
@@ -240,8 +240,9 @@ export function AgentChatSystem({ caseId, victimName, isVictimOnline = false }: 
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && sendMessage()}
             className="flex-1"
+            aria-label="Chat message input"
           />
-          <Button onClick={sendMessage} disabled={!newMessage.trim()}>
+          <Button onClick={sendMessage} disabled={!newMessage.trim()} aria-label="Send message">
             <Send className="w-4 h-4" />
           </Button>
         </div>
