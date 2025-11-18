@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user)
     localStorage.setItem("userData", JSON.stringify(data.user))
     if (data.user.role === "reviewer") router.push("/reviewer")
-    else router.push("/dashboard")
+    else router.push("/")
   }
 
   const signup = async (userData: { email: string; password: string; firstName?: string; lastName?: string; role?: string }) => {
