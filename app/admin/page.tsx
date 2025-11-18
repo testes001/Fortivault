@@ -13,8 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { AdminCaseList } from "@/components/admin/admin-case-list"
 import { AdminStats } from "@/components/admin/admin-stats"
-import { AgentChatSystem } from "@/components/chat/agent-chat-system"
-import { Shield, Users, FileText, MessageCircle, Lock } from "lucide-react"
+import { Shield, Users, FileText, Lock } from "lucide-react"
 
 interface AdminCase {
   id: string
@@ -262,13 +261,9 @@ export default function AdminPage() {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="details" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="details">Case Details</TabsTrigger>
                       <TabsTrigger value="management">Management</TabsTrigger>
-                      <TabsTrigger value="chat" className="flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4" />
-                        Agent Chat
-                      </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="details" className="mt-6 space-y-6">
@@ -373,10 +368,6 @@ export default function AdminPage() {
                           </CardContent>
                         </Card>
                       </div>
-                    </TabsContent>
-
-                    <TabsContent value="chat" className="mt-6">
-                      <AgentChatSystem caseId={selectedCase.id} />
                     </TabsContent>
                   </Tabs>
                 </CardContent>

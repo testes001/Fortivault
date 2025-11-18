@@ -93,52 +93,46 @@ class EmailService {
     return this.sendEmail({ to: email, subject, html })
   }
 
-  async sendWelcomeEmail(email: string, caseId: string, dashboardLink: string) {
-    const subject = "Welcome to Fortivault - Your Dashboard is Ready"
+  async sendConfirmationEmail(email: string, caseId: string) {
+    const subject = "Fraud Report Received - Fortivault"
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #1e3a8a 0%, #059669 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-          <h1 style="color: white; margin: 0; font-size: 24px;">Welcome to Your Recovery Journey</h1>
+          <h1 style="color: white; margin: 0; font-size: 24px;">Fraud Report Confirmation</h1>
         </div>
-        
+
         <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e2e8f0;">
           <p style="font-size: 16px; color: #334155; margin-bottom: 20px;">
-            Your fraud report has been successfully submitted and your secure dashboard is now ready.
+            Thank you for submitting your fraud report to Fortivault. We have successfully received your case and it is now in our system for processing.
           </p>
-          
+
           <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
-            <h3 style="color: #1e3a8a; margin-top: 0;">Case Details:</h3>
-            <p style="margin: 5px 0;"><strong>Case ID:</strong> ${caseId}</p>
-            <p style="margin: 5px 0;"><strong>Status:</strong> Under Review</p>
-            <p style="margin: 5px 0;"><strong>Assigned Agent:</strong> Will be assigned within 24 hours</p>
+            <h3 style="color: #1e3a8a; margin-top: 0;">Your Case Details:</h3>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>Case Reference Number:</strong></p>
+            <p style="margin: 5px 0 15px 0; font-size: 18px; font-family: monospace; color: #059669; font-weight: bold;">${caseId}</p>
+            <p style="margin: 5px 0; font-size: 13px; color: #64748b;">Please save this number for your records. You'll need it if you need to follow up on your case.</p>
           </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${dashboardLink}" style="background: linear-gradient(135deg, #1e3a8a 0%, #059669 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-              Access Your Dashboard
-            </a>
-          </div>
-          
+
           <div style="background: #ecfdf5; padding: 15px; border-radius: 6px; border-left: 4px solid #059669;">
             <h4 style="color: #065f46; margin-top: 0;">What happens next?</h4>
-            <ul style="color: #065f46; margin: 0; padding-left: 20px;">
+            <ul style="color: #065f46; margin: 0; padding-left: 20px; font-size: 14px;">
               <li>Our recovery specialists will review your case within 24 hours</li>
-              <li>You'll receive updates via your dashboard and email</li>
-              <li>A dedicated agent will be assigned to assist you</li>
-              <li>We'll begin the recovery process immediately</li>
+              <li>You'll receive updates via email as your case progresses</li>
+              <li>Additional information may be requested as needed</li>
+              <li>We'll work on the recovery process immediately</li>
             </ul>
           </div>
-          
+
           <div style="background: #fef3c7; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b; margin-top: 20px;">
             <p style="font-size: 14px; color: #92400e; margin: 0;">
-              <strong>Important:</strong> Keep this email safe. Your dashboard link is unique and secure. This link will expire when your case is closed.
+              <strong>Questions?</strong> Contact our support team at support@fortivault.com or visit our website for more information.
             </p>
           </div>
         </div>
-        
+
         <div style="text-align: center; padding: 20px; color: #64748b; font-size: 12px;">
-          <p>Fortivault | Built to protect. Trusted to Secure | 24/7 Support Available</p>
-          <p>Need help? Reply to this email or contact support@fortivault.com</p>
+          <p>Fortivault | Built to protect. Trusted to Secure</p>
+          <p>24/7 Support Available | support@fortivault.com</p>
         </div>
       </div>
     `

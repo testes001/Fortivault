@@ -150,15 +150,15 @@ export function FraudReportingWizard() {
       </p>
 
       {/* Hidden inputs for all form fields for Netlify */}
-      <input type="hidden" name="scamType" value={data.scamType} />
-      <input type="hidden" name="amount" value={data.amount} />
-      <input type="hidden" name="currency" value={data.currency} />
-      <input type="hidden" name="timeline" value={data.timeline} />
-      <textarea name="description" value={data.description} className="hidden" />
-      <input type="hidden" name="transactionHashes" value={JSON.stringify(data.transactionHashes)} />
-      <input type="hidden" name="bankReferences" value={JSON.stringify(data.bankReferences)} />
-      <input type="hidden" name="contactEmail" value={data.contactEmail} />
-      <input type="hidden" name="contactPhone" value={data.contactPhone} />
+      <input type="hidden" name="scamType" value={data.scamType} readOnly />
+      <input type="hidden" name="amount" value={data.amount} readOnly />
+      <input type="hidden" name="currency" value={data.currency} readOnly />
+      <input type="hidden" name="timeline" value={data.timeline} readOnly />
+      <textarea name="description" value={data.description} className="hidden" readOnly />
+      <input type="hidden" name="transactionHashes" value={JSON.stringify(data.transactionHashes)} readOnly />
+      <input type="hidden" name="bankReferences" value={JSON.stringify(data.bankReferences)} readOnly />
+      <input type="hidden" name="contactEmail" value={data.contactEmail} readOnly />
+      <input type="hidden" name="contactPhone" value={data.contactPhone} readOnly />
       {/* Netlify needs to see a file input. We can have a hidden one. */}
       <input type="file" name="evidenceFiles" className="hidden" multiple />
 

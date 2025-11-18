@@ -1,8 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { CheckCircle, Mail, Clock, Shield } from "lucide-react"
+import { CheckCircle, Mail } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
 
@@ -12,150 +11,85 @@ interface SuccessStepProps {
 }
 
 export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
-  const [showVerification, setShowVerification] = useState(false)
-  const [verificationCode, setVerificationCode] = useState("")
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [isVerified, setIsVerified] = useState(false)
-  const [showProgress, setShowProgress] = useState(false)
-  const [progressStep, setProgressStep] = useState(0)
+  const [isProcessing, setIsProcessing] = useState(true)
+  const [completedSteps, setCompletedSteps] = useState<number[]>([])
 
   useEffect(() => {
-    const sendOTP = async () => {
-      try {
-        const response = await fetch("/api/send-otp", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: userEmail,
-            caseId: caseId,
-          }),
-        })
-
-        const result = await response.json()
-        if (result.success) {
-          if (process.env.NODE_ENV === "development") {
-            console.log("[Fortivault] OTP sent successfully")
-          }
-          setShowVerification(true)
-        } else {
-          if (process.env.NODE_ENV === "development") {
-            console.error("[Fortivault] Failed to send OTP:", result.error)
-          }
-        }
-      } catch (error) {
-        if (process.env.NODE_ENV === "development") {
-          console.error("[Fortivault] OTP sending error:", error)
-        }
-      }
-    }
-
-    const timer = setTimeout(() => {
-      sendOTP()
-    }, 2000)
-    return () => clearTimeout(timer)
-  }, [userEmail, caseId])
-
-  const handleVerification = async () => {
-    if (verificationCode.length !== 6) return
-
-    setIsVerifying(true)
-
-    try {
-      const response = await fetch("/api/verify-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: userEmail,
-          otp: verificationCode,
-          caseId: caseId,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        if (process.env.NODE_ENV === "development") {
-          console.log("[Fortivault] Email verified successfully")
-        }
-        setIsVerifying(false)
-        setIsVerified(true)
-        setShowProgress(true)
-
-        // Progress animation sequence
-        const progressSteps = [
-          "Verifying details...",
-          "Analyzing report...",
-          "Creating dashboard...",
-          "Setting up secure access...",
-        ]
-
-        progressSteps.forEach((_, index) => {
-          setTimeout(
-            () => {
-              setProgressStep(index + 1)
-            },
-            (index + 1) * 1500,
-          )
-        })
-
-        // Show final message after progress
-        setTimeout(() => {
-          setShowProgress(false)
-        }, 7000)
-      } else {
-        setIsVerifying(false)
-        alert("Invalid verification code. Please try again.")
-        setVerificationCode("")
-      }
-    } catch (error) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("[Fortivault] Verification error:", error)
-      }
-      setIsVerifying(false)
-      alert("Verification failed. Please try again.")
-    }
-  }
-
-  if (showProgress) {
     const progressMessages = [
-      "Verifying details...",
-      "Analyzing report...",
-      "Creating dashboard...",
-      "Setting up secure access...",
+      "Verifying report details...",
+      "Validating evidence...",
+      "Securing case data...",
+      "Finalizing submission...",
+    ]
+
+    progressMessages.forEach((_, index) => {
+      const timer = setTimeout(() => {
+        setCompletedSteps((prev) => [...prev, index])
+      }, (index + 1) * 1000)
+
+      return () => clearTimeout(timer)
+    })
+
+    const finalTimer = setTimeout(() => {
+      setIsProcessing(false)
+    }, 5000)
+
+    return () => clearTimeout(finalTimer)
+  }, [])
+
+  if (isProcessing) {
+    const progressMessages = [
+      "Verifying report details...",
+      "Validating evidence...",
+      "Securing case data...",
+      "Finalizing submission...",
     ]
 
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
         <Card className="text-center">
           <CardContent className="p-8 space-y-6">
-            <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-              <Shield className="w-8 h-8 text-primary animate-pulse" />
-            </div>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="w-16 h-16 mx-auto"
+            >
+              <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary"></div>
+            </motion.div>
 
             <div className="space-y-4">
               <h2 className="text-2xl font-bold">Processing Your Report</h2>
-              <div className="space-y-2">
+              <p className="text-muted-foreground">Please wait while we securely process your fraud report...</p>
+
+              <div className="space-y-3 mt-6">
                 {progressMessages.map((message, index) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{
-                      opacity: progressStep > index ? 1 : 0.3,
+                      opacity: completedSteps.includes(index) ? 1 : 0.4,
                       x: 0,
                     }}
-                    className={`flex items-center justify-center space-x-2 ${
-                      progressStep > index ? "text-accent" : "text-muted-foreground"
+                    transition={{ duration: 0.3 }}
+                    className={`flex items-center gap-3 justify-start ${
+                      completedSteps.includes(index) ? "text-accent" : "text-muted-foreground"
                     }`}
                   >
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        progressStep > index ? "bg-accent" : "bg-muted-foreground/30"
-                      }`}
-                    />
+                    {completedSteps.includes(index) ? (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 200 }}
+                      >
+                        <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="w-5 h-5 rounded-full bg-primary/30 flex-shrink-0"
+                      />
+                    )}
                     <span className="text-sm">{message}</span>
                   </motion.div>
                 ))}
@@ -167,44 +101,12 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
     )
   }
 
-  if (isVerified && !showProgress) {
-    return (
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-        <Card className="text-center">
-          <CardContent className="p-8 space-y-6">
-            <CheckCircle className="w-16 h-16 mx-auto text-accent" />
-
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-accent">Dashboard Setup Complete!</h2>
-              <p className="text-muted-foreground text-pretty">
-                Your dashboard access portal will be delivered to your verified email address within the next 30
-                minutes.
-              </p>
-            </div>
-
-            <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                <Mail className="w-5 h-5 text-accent" />
-                <h3 className="font-semibold text-accent">Dashboard Access Link</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                You'll be able to keep track of your reports, access our services, and communicate with your assigned
-                Recovery Agent through your personalized dashboard.
-              </p>
-            </div>
-
-            <div className="bg-muted/50 rounded-lg p-4">
-              <p className="text-sm font-medium mb-2">Your Case Reference Number:</p>
-              <p className="text-lg font-mono font-bold text-primary">{caseId}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    )
-  }
-
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <Card className="text-center">
         <CardContent className="p-8 space-y-6">
           <motion.div
@@ -216,61 +118,38 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
           </motion.div>
 
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-accent">Almost There!</h2>
+            <h2 className="text-2xl font-bold text-accent">Report Submitted Successfully!</h2>
             <p className="text-muted-foreground text-pretty">
-              Your fraud report has been submitted successfully. Please verify your email address to complete the
-              process.
+              Your fraud report has been securely received and is now in our system for processing.
             </p>
           </div>
 
           <div className="bg-muted/50 rounded-lg p-4">
             <p className="text-sm font-medium mb-2">Your Case Reference Number:</p>
             <p className="text-lg font-mono font-bold text-primary">{caseId}</p>
+            <p className="text-xs text-muted-foreground mt-2">Please save this for your records</p>
           </div>
 
-          {showVerification ? (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-                <div className="flex items-center justify-center space-x-2 mb-3">
-                  <Mail className="w-5 h-5 text-primary" />
-                  <h3 className="font-semibold text-primary">Email Verification Required</h3>
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  We've sent a 6-digit verification code to <strong>{userEmail}</strong>
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Mail className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              <div className="text-left">
+                <h3 className="font-semibold text-primary mb-2">Confirmation Email Sent</h3>
+                <p className="text-sm text-muted-foreground">
+                  We've sent a confirmation email to <strong>{userEmail}</strong> with your case reference number and next steps.
                 </p>
-
-                <div className="space-y-3">
-                  <label htmlFor="verification-code" className="sr-only">6-digit verification code</label>
-                  <input
-                    id="verification-code"
-                    type="text"
-                    placeholder="Enter 6-digit code"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    className="w-full text-center text-lg font-mono tracking-widest border rounded-lg p-3"
-                    maxLength={6}
-                    aria-label="6-digit verification code"
-                  />
-
-                  <Button
-                    onClick={handleVerification}
-                    disabled={verificationCode.length !== 6 || isVerifying}
-                    className="w-full"
-                  >
-                    {isVerifying ? "Verifying..." : "Verify Email"}
-                  </Button>
-                </div>
               </div>
-            </motion.div>
-          ) : (
-            <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                <Clock className="w-5 h-5 text-primary animate-pulse" />
-                <h3 className="font-semibold text-primary">Sending Verification Code...</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">Please check your email inbox for the verification code.</p>
             </div>
-          )}
+          </div>
+
+          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 text-left">
+            <p className="text-sm font-medium text-accent mb-2">What happens next?</p>
+            <ul className="text-xs text-muted-foreground space-y-1">
+              <li>• Your case will be reviewed by our specialists</li>
+              <li>• You'll receive updates via email</li>
+              <li>• Additional information may be requested as needed</li>
+            </ul>
+          </div>
         </CardContent>
       </Card>
     </motion.div>
