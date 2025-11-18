@@ -8,9 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { CaseClassification } from "@/components/reviewer/case-classification"
-import { AgentChatSystem } from "@/components/chat/agent-chat-system"
 import { CaseEvidence } from "@/components/reviewer/case-evidence"
-import { User, DollarSign, AlertTriangle, Save, MessageCircle } from "lucide-react"
+import { User, DollarSign, AlertTriangle, Save } from "lucide-react"
 import type { ReviewerCase } from "@/components/reviewer-dashboard"
 
 interface CaseDetailsProps {
@@ -73,14 +72,10 @@ export function CaseDetails({ caseData }: CaseDetailsProps) {
 
       <CardContent>
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="classification">Classification</TabsTrigger>
             <TabsTrigger value="evidence">Evidence</TabsTrigger>
-            <TabsTrigger value="chat" className="flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" />
-              Victim Chat
-            </TabsTrigger>
             <TabsTrigger value="actions">Actions</TabsTrigger>
           </TabsList>
 
@@ -194,14 +189,6 @@ export function CaseDetails({ caseData }: CaseDetailsProps) {
 
           <TabsContent value="evidence" className="mt-6">
             <CaseEvidence caseId={caseData.id} />
-          </TabsContent>
-
-          <TabsContent value="chat" className="mt-6">
-            <AgentChatSystem
-              caseId={caseData.id}
-              victimName={caseData.victimName}
-              isVictimOnline={Math.random() > 0.5}
-            />
           </TabsContent>
 
           <TabsContent value="actions" className="mt-6">
