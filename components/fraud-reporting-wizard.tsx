@@ -100,7 +100,7 @@ export function FraudReportingWizard() {
     })
 
     try {
-      const response = await fetch("/", {
+      const response = await fetch("/.netlify/functions/form", {
         method: "POST",
         body: formData,
       })
