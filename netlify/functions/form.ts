@@ -1,7 +1,4 @@
 import { Handler, HandlerEvent } from "@netlify/functions"
-import { IncomingForm } from "formidable"
-import fs from "fs"
-import path from "path"
 
 const handler: Handler = async (event: HandlerEvent) => {
   if (event.httpMethod !== "POST") {
@@ -12,50 +9,22 @@ const handler: Handler = async (event: HandlerEvent) => {
   }
 
   try {
-    const body = event.isBase64Encoded ? Buffer.from(event.body || "", "base64") : event.body || ""
+    const body = event.body || ""
     const contentType = event.headers["content-type"] || ""
 
-    let formFields: Record<string, any> = {}
-    let formFiles: Record<string, any[]> = {}
+    let formData: Record<string, any> = {}
 
-    if (contentType.includes("application/x-www-form-urlencoded")) {
-      const params = new URLSearchParams(body as string)
-      formFields = Object.fromEntries(params)
+    if (contentType.includes("application/json")) {
+      formData = JSON.parse(body)
+    } else if (contentType.includes("application/x-www-form-urlencoded")) {
+      const params = new URLSearchParams(body)
+      formData = Object.fromEntries(params)
     } else if (contentType.includes("multipart/form-data")) {
-      const form = new IncomingForm({
-        uploadDir: "/tmp",
-        keepExtensions: true,
-      })
-
-      await new Promise((resolve, reject) => {
-        form.parse(
-          {
-            headers: event.headers,
-            on: (event: string, chunk: any) => {
-              if (event === "data") {
-                // Not needed for form parsing
-              }
-            },
-            once: (event: string, handler: any) => {
-              // Not needed for form parsing
-            },
-          } as any,
-          (err: Error | null, fields: any, files: any) => {
-            if (err) reject(err)
-            formFields = fields
-            formFiles = files
-            resolve(null)
-          }
-        )
-      })
-    } else {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: "Invalid content type" }),
-      }
+      const params = new URLSearchParams(body.split("--")[0])
+      formData = Object.fromEntries(params)
     }
 
-    const formName = formFields["form-name"] || formFields.form_name
+    const formName = formData["form-name"]
 
     if (!formName) {
       return {
@@ -64,28 +33,28 @@ const handler: Handler = async (event: HandlerEvent) => {
       }
     }
 
-    const fileCount = Object.keys(formFiles).reduce((count, key) => {
-      const files = formFiles[key]
-      return count + (Array.isArray(files) ? files.length : 1)
-    }, 0)
+    const timestamp = new Date().toISOString()
+    const caseId = `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
 
-    const formSubmission = {
+    const submission = {
       formName,
-      data: formFields,
-      files: fileCount,
-      timestamp: new Date().toISOString(),
-      userAgent: event.headers["user-agent"],
-      ip: event.headers["client-ip"] || event.headers["x-forwarded-for"],
+      caseId,
+      email: formData.contactEmail,
+      fullName: formData.fullName,
+      scamType: formData.scamType,
+      amount: formData.amount,
+      timestamp,
+      ip: event.headers["client-ip"] || event.headers["x-forwarded-for"] || "unknown",
     }
 
-    console.log("Form submission received:", formSubmission)
+    console.log("Fraud report submission received:", submission)
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         message: "Form submitted successfully",
-        caseId: `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-        submissionTime: formSubmission.timestamp,
+        caseId,
+        submissionTime: timestamp,
       }),
     }
   } catch (error) {
