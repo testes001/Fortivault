@@ -28,34 +28,10 @@ export function ConfirmationStep({ data, updateData }: ConfirmationStepProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Review & Contact Information</h3>
+        <h3 className="text-lg font-semibold mb-4">Review Your Submission</h3>
         <p className="text-muted-foreground mb-6">
-          Please review your information and provide contact details so we can reach you about your case.
+          Please review all the information you have provided before submitting your report.
         </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="contact-email">Email Address *</Label>
-          <Input
-            id="contact-email"
-            type="email"
-            placeholder="your.email@example.com"
-            value={data.contactEmail}
-            onChange={(e) => updateData({ contactEmail: e.target.value })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="contact-phone">Phone Number (Optional)</Label>
-          <Input
-            id="contact-phone"
-            type="tel"
-            placeholder="+1 (555) 123-4567"
-            value={data.contactPhone}
-            onChange={(e) => updateData({ contactPhone: e.target.value })}
-          />
-        </div>
       </div>
 
       <Card>
@@ -64,6 +40,18 @@ export function ConfirmationStep({ data, updateData }: ConfirmationStepProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-medium">Full Name</Label>
+              <p className="text-sm">{data.fullName}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Email Address</Label>
+              <p className="text-sm">{data.contactEmail}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Phone Number</Label>
+              <p className="text-sm">{data.contactPhone || "Not provided"}</p>
+            </div>
             <div>
               <Label className="text-sm font-medium">Scam Type</Label>
               <p className="text-sm">{getScamTypeLabel(data.scamType)}</p>
