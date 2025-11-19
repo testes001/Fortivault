@@ -91,7 +91,7 @@ export function FraudReportingWizard() {
     })
 
     try {
-      const response = await fetch("/__forms.html", {
+      const response = await fetch("/", {
         method: "POST",
         body: formData,
       })
@@ -118,7 +118,7 @@ export function FraudReportingWizard() {
       case 1:
         return data.amount && data.currency && data.timeline && data.description
       case 2:
-        return data.scamType === "crypto" ? data.transactionHashes.length > 0 : data.bankReferences.length > 0
+        return true
       case 3:
         return data.evidenceFiles.length > 0
       case 4:
