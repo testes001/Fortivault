@@ -142,7 +142,12 @@ export function FraudReportingWizard() {
       data-netlify-honeypot="bot-field"
       onSubmit={handleSubmit}
     >
-
+      <input type="hidden" name="form-name" value="fraud-report" />
+      <p className="hidden">
+        <label>
+          Don’t fill this out if you’re human: <input name="bot-field" />
+        </label>
+      </p>
 
       <Card className="w-full">
         <CardHeader>
