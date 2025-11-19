@@ -82,55 +82,26 @@ export function FraudReportingWizard() {
     const generatedCaseId = `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
     setCaseId(generatedCaseId)
     
-    // Update hidden form fields with current data before submission
-    const form = e.currentTarget
-    const hiddenFields = form.querySelectorAll('input[type="hidden"]')
+    // Create FormData with all wizard data for Netlify Forms
+    const formData = new FormData()
+    formData.append('form-name', 'fraud-report')
+    formData.append('fullName', data.fullName)
+    formData.append('scamType', data.scamType)
+    formData.append('amount', data.amount)
+    formData.append('currency', data.currency)
+    formData.append('timeline', data.timeline)
+    formData.append('description', data.description)
+    formData.append('contactEmail', data.contactEmail)
+    formData.append('contactPhone', data.contactPhone)
+    formData.append('transactionHashes', data.transactionHashes.join(', '))
+    formData.append('bankReferences', data.bankReferences.join(', '))
+    formData.append('evidenceFileCount', data.evidenceFiles.length.toString())
+    formData.append('evidenceFileNames', data.evidenceFiles.map(f => f.name).join(', '))
+    formData.append('caseId', generatedCaseId)
+    formData.append('submissionDate', new Date().toISOString())
     
-    hiddenFields.forEach((field: any) => {
-      switch (field.name) {
-        case 'fullName':
-          field.value = data.fullName
-          break
-        case 'scamType':
-          field.value = data.scamType
-          break
-        case 'amount':
-          field.value = data.amount
-          break
-        case 'currency':
-          field.value = data.currency
-          break
-        case 'timeline':
-          field.value = data.timeline
-          break
-        case 'description':
-          field.value = data.description
-          break
-        case 'contactEmail':
-          field.value = data.contactEmail
-          break
-        case 'contactPhone':
-          field.value = data.contactPhone
-          break
-        case 'transactionHashes':
-          field.value = data.transactionHashes.join(', ')
-          break
-        case 'bankReferences':
-          field.value = data.bankReferences.join(', ')
-          break
-        case 'evidenceFileCount':
-          field.value = data.evidenceFiles.length.toString()
-          break
-        case 'evidenceFileNames':
-          field.value = data.evidenceFiles.map(f => f.name).join(', ')
-          break
-      }
-    })
-    
-    // Submit form naturally to Netlify
-    const formData = new FormData(form)
-    
-    fetch('/', {
+    // Submit to static forms page for Netlify Forms processing
+    fetch('/forms', {
       method: 'POST',
       body: formData
     })
@@ -171,23 +142,7 @@ export function FraudReportingWizard() {
   const progress = ((currentStep + 1) / steps.length) * 100
 
   return (
-    <form name="fraud-report" method="POST" data-netlify="true" onSubmit={handleSubmit} netlify-honeypot="bot-field">
-      <input type="hidden" name="bot-field" />
-      <input type="hidden" name="form-name" value="fraud-report" />
-      
-      {/* Hidden fields to capture all wizard data for Netlify Forms */}
-      <input type="hidden" name="fullName" value={data.fullName} />
-      <input type="hidden" name="scamType" value={data.scamType} />
-      <input type="hidden" name="amount" value={data.amount} />
-      <input type="hidden" name="currency" value={data.currency} />
-      <input type="hidden" name="timeline" value={data.timeline} />
-      <input type="hidden" name="description" value={data.description} />
-      <input type="hidden" name="contactEmail" value={data.contactEmail} />
-      <input type="hidden" name="contactPhone" value={data.contactPhone} />
-      <input type="hidden" name="transactionHashes" value={data.transactionHashes.join(', ')} />
-      <input type="hidden" name="bankReferences" value={data.bankReferences.join(', ')} />
-      <input type="hidden" name="evidenceFileCount" value={data.evidenceFiles.length.toString()} />
-      <input type="hidden" name="evidenceFileNames" value={data.evidenceFiles.map(f => f.name).join(', ')} />
+    <form onSubmit={handleSubmit}>
 
       <Card className="w-full">
         <CardHeader>
