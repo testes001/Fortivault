@@ -1,12 +1,11 @@
 "use client"
 
 import type React from "react"
-
 import { useCallback } from "react"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Upload, ImageIcon, X } from "lucide-react"
+import { Upload, File as FileIcon, X } from "lucide-react"
 import type { WizardData } from "@/components/fraud-reporting-wizard"
 
 interface EvidenceStepProps {
@@ -15,37 +14,20 @@ interface EvidenceStepProps {
 }
 
 export function EvidenceStep({ data, updateData }: EvidenceStepProps) {
-  const handleFileUpload = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(event.target.files || [])
-      const uploadedUrls = [...data.evidenceFileUrls]
-
-      for (const file of files) {
-        const formData = new FormData()
-        formData.append("file", file)
-
-        try {
-          const response = await fetch("https://file.io", {
-            method: "POST",
-            body: formData,
-          })
-          const result = await response.json()
-          if (result.success) {
-            uploadedUrls.push(result.link)
-          }
-        } catch (error) {
-          console.error("File upload error:", error)
-        }
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const newFiles = Array.from(event.target.files || [])
+      if (newFiles.length > 0) {
+        const updatedFiles = [...data.evidenceFiles, ...newFiles]
+        updateData({ evidenceFiles: updatedFiles })
       }
-
-      updateData({ evidenceFileUrls: uploadedUrls })
     },
-    [data.evidenceFileUrls, updateData],
+    [data.evidenceFiles, updateData],
   )
 
-  const removeFile = (index: number) => {
+  const removeFile = (indexToRemove: number) => {
     updateData({
-      evidenceFileUrls: data.evidenceFileUrls.filter((_, i) => i !== index),
+      evidenceFiles: data.evidenceFiles.filter((_, index) => index !== indexToRemove),
     })
   }
 
@@ -73,7 +55,7 @@ export function EvidenceStep({ data, updateData }: EvidenceStepProps) {
                 type="file"
                 multiple
                 accept=".jpg,.jpeg,.png,.pdf,.txt,.doc,.docx"
-                onChange={handleFileUpload}
+                onChange={handleFileChange}
                 className="hidden"
               />
             </div>
@@ -84,19 +66,17 @@ export function EvidenceStep({ data, updateData }: EvidenceStepProps) {
         </CardContent>
       </Card>
 
-      {data.evidenceFileUrls.length > 0 && (
+      {data.evidenceFiles.length > 0 && (
         <div className="space-y-4">
-          <Label>Uploaded File Links ({data.evidenceFileUrls.length}):</Label>
+          <Label>Uploaded Files ({data.evidenceFiles.length}):</Label>
           <div className="space-y-2">
-            {data.evidenceFileUrls.map((url, index) => (
+            {data.evidenceFiles.map((file, index) => (
               <Card key={index}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <ImageIcon className="w-4 h-4" />
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="font-medium truncate">
-                        {url}
-                      </a>
+                      <FileIcon className="w-4 h-4" />
+                      <span className="font-medium truncate">{file.name}</span>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => removeFile(index)}>
                       <X className="w-4 h-4" />
