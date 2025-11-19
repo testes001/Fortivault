@@ -38,36 +38,23 @@ export default function ContactPage() {
                     className="space-y-6"
                     name="contact"
                     method="POST"
+                    action="/"
                     data-netlify="true"
                     netlify-honeypot="bot-field"
                   >
                     <input type="hidden" name="bot-field" />
                     <input type="hidden" name="form-name" value="contact" />
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="firstName" className="block text-sm font-medium mb-2">
-                          First Name
-                        </label>
-                        <Input id="firstName" name="firstName" placeholder="Enter your first name" required />
-                      </div>
-                      <div>
-                        <label htmlFor="lastName" className="block text-sm font-medium mb-2">
-                          Last Name
-                        </label>
-                        <Input id="lastName" name="lastName" placeholder="Enter your last name" required />
-                      </div>
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium mb-2">
+                        Full Name
+                      </label>
+                      <Input id="name" name="name" placeholder="Enter your full name" required />
                     </div>
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium mb-2">
                         Email Address
                       </label>
                       <Input id="email" name="email" type="email" placeholder="Enter your email" required />
-                    </div>
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium mb-2">
-                        Phone Number
-                      </label>
-                      <Input id="phone" name="phone" type="tel" placeholder="Enter your phone number" />
                     </div>
                     <div>
                       <label htmlFor="subject" className="block text-sm font-medium mb-2">

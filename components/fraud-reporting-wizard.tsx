@@ -85,6 +85,7 @@ export function FraudReportingWizard() {
     // Create FormData with all wizard data for Netlify Forms
     const formData = new FormData()
     formData.append('form-name', 'fraud-report')
+    formData.append('bot-field', '') // Honeypot field - must remain empty
     formData.append('fullName', data.fullName)
     formData.append('scamType', data.scamType)
     formData.append('amount', data.amount)
@@ -100,8 +101,8 @@ export function FraudReportingWizard() {
     formData.append('caseId', generatedCaseId)
     formData.append('submissionDate', new Date().toISOString())
     
-    // Submit to static forms page for Netlify Forms processing
-    fetch('/forms', {
+    // Submit to root path where static form blueprint exists
+    fetch('/', {
       method: 'POST',
       body: formData
     })
