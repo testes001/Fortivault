@@ -91,7 +91,7 @@ export function FraudReportingWizard() {
     })
 
     try {
-      const response = await fetch("/", {
+      const response = await fetch("/__forms.html", {
         method: "POST",
         body: formData,
       })
@@ -142,25 +142,6 @@ export function FraudReportingWizard() {
       data-netlify-honeypot="bot-field"
       onSubmit={handleSubmit}
     >
-      <input type="hidden" name="form-name" value="fraud-report" />
-      <p className="hidden">
-        <label>
-          Don’t fill this out if you’re human: <input name="bot-field" />
-        </label>
-      </p>
-
-      {/* Hidden inputs for all form fields for Netlify */}
-      <input type="hidden" name="scamType" value={data.scamType} readOnly />
-      <input type="hidden" name="amount" value={data.amount} readOnly />
-      <input type="hidden" name="currency" value={data.currency} readOnly />
-      <input type="hidden" name="timeline" value={data.timeline} readOnly />
-      <textarea name="description" value={data.description} className="hidden" readOnly />
-      <input type="hidden" name="transactionHashes" value={JSON.stringify(data.transactionHashes)} readOnly />
-      <input type="hidden" name="bankReferences" value={JSON.stringify(data.bankReferences)} readOnly />
-      <input type="hidden" name="contactEmail" value={data.contactEmail} readOnly />
-      <input type="hidden" name="contactPhone" value={data.contactPhone} readOnly />
-      {/* Netlify needs to see a file input. We can have a hidden one. */}
-      <input type="file" name="evidenceFiles" className="hidden" multiple />
 
 
       <Card className="w-full">
