@@ -21,7 +21,7 @@ export interface WizardData {
   description: string
   transactionHashes: string[]
   bankReferences: string[]
-  evidenceFiles: File[]
+  evidenceFileUrls: string[]
   contactEmail: string
   contactPhone: string
 }
@@ -34,7 +34,7 @@ const initialData: WizardData = {
   description: "",
   transactionHashes: [],
   bankReferences: [],
-  evidenceFiles: [],
+  evidenceFileUrls: [],
   contactEmail: "",
   contactPhone: "",
 }
@@ -85,10 +85,7 @@ export function FraudReportingWizard() {
     formData.append("contactPhone", data.contactPhone)
     formData.append("transactionHashes", JSON.stringify(data.transactionHashes))
     formData.append("bankReferences", JSON.stringify(data.bankReferences))
-
-    data.evidenceFiles.forEach((file) => {
-      formData.append("evidenceFiles", file)
-    })
+    formData.append("evidenceFileUrls", JSON.stringify(data.evidenceFileUrls))
 
     try {
       const response = await fetch("/", {
@@ -120,7 +117,7 @@ export function FraudReportingWizard() {
       case 2:
         return true
       case 3:
-        return data.evidenceFiles.length > 0
+        return data.evidenceFileUrls.length > 0
       case 4:
         return data.contactEmail !== ""
       default:
