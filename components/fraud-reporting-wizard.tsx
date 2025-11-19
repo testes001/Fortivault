@@ -146,7 +146,8 @@ export function FraudReportingWizard() {
   const progress = ((currentStep + 1) / steps.length) * 100
 
   return (
-    <form name="fraud-report" onSubmit={handleSubmit}>
+    <form name="fraud-report" data-netlify="true" onSubmit={handleSubmit} netlify-honeypot="bot-field">
+      <input type="hidden" name="bot-field" />
       <input type="hidden" name="form-name" value="fraud-report" />
 
       <Card className="w-full">
