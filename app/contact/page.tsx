@@ -87,7 +87,6 @@ export default function ContactPage() {
                         required
                       />
                     </div>
-                    <input type="hidden" name="form_type" value="contact_form" />
                     <Button type="submit" className="w-full">
                       Send Message
                     </Button>
