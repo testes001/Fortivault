@@ -13,6 +13,12 @@ export const metadata: Metadata = {
   description:
     "Built to protect. Trusted to Secure. Professional fraud recovery and scam reporting platform. We support victims of crypto and fiat fraud with secure reporting and recovery guidance.",
   generator: "v0.app",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 }
 
 export default function RootLayout({
