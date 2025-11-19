@@ -129,7 +129,7 @@ export function FraudReportingWizard() {
       case 2:
         return data.amount && data.currency && data.timeline && data.description
       case 3:
-        return true
+        return data.transactionHashes.length > 0 || data.bankReferences.length > 0
       case 4:
         return true
       case 5:
