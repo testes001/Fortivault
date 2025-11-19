@@ -120,6 +120,36 @@ const handler: Handler = async (event: HandlerEvent) => {
   }
 }
 
+function logFormSubmission(submission: SubmissionRecord): void {
+  console.log("\n" + "=".repeat(100))
+  console.log(`📋 FRAUD REPORT SUBMISSION RECEIVED`)
+  console.log("=".repeat(100))
+  console.log(`Case ID: ${submission.caseId}`)
+  console.log(`Time: ${submission.timestamp}`)
+  console.log(`Form: ${submission.formName}`)
+  console.log("-".repeat(100))
+  console.log(`Submitter: ${submission.fullName} (${submission.email})`)
+  if (submission.contactPhone) console.log(`Phone: ${submission.contactPhone}`)
+  console.log(`Scam Type: ${submission.scamType}`)
+  if (submission.amount) console.log(`Amount: ${submission.amount} ${submission.currency}`)
+  console.log(`Timeline: ${submission.timeline}`)
+  console.log(`Description: ${submission.description?.substring(0, 100)}...`)
+  console.log("-".repeat(100))
+  console.log(`Transaction Hashes: ${submission.transactionHashes.length}`)
+  console.log(`Bank References: ${submission.bankReferences.length}`)
+  console.log(`Files Uploaded: ${submission.filesUploaded}`)
+  if (submission.fileNames.length > 0) {
+    console.log(`File Names: ${submission.fileNames.join(", ")}`)
+  }
+  console.log("-".repeat(100))
+  console.log(`IP Address: ${submission.ip}`)
+  console.log(`User Agent: ${submission.userAgent}`)
+  console.log("=".repeat(100) + "\n")
+
+  // Log full JSON for archival
+  console.log("FULL_SUBMISSION_DATA:", JSON.stringify(submission, null, 2))
+}
+
 function parseMultipartFormData(body: string, contentType: string): Record<string, any> {
   const formData: Record<string, any> = {}
   const fileNames: string[] = []
