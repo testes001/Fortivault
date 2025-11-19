@@ -86,8 +86,8 @@ export function FraudReportingWizard() {
     formData.append("transactionHashes", JSON.stringify(data.transactionHashes))
     formData.append("bankReferences", JSON.stringify(data.bankReferences))
 
-    data.evidenceFiles.forEach((file, index) => {
-      formData.append(`evidenceFile_${index}`, file)
+    data.evidenceFiles.forEach((file) => {
+      formData.append("evidenceFiles", file)
     })
 
     try {
@@ -118,7 +118,7 @@ export function FraudReportingWizard() {
       case 1:
         return data.amount && data.currency && data.timeline && data.description
       case 2:
-        return data.scamType === "crypto" ? data.transactionHashes.length > 0 : data.bankReferences.length > 0
+        return true
       case 3:
         return data.evidenceFiles.length > 0
       case 4:
@@ -142,25 +142,6 @@ export function FraudReportingWizard() {
       data-netlify-honeypot="bot-field"
       onSubmit={handleSubmit}
     >
-      <input type="hidden" name="form-name" value="fraud-report" />
-      <p className="hidden">
-        <label>
-          Don’t fill this out if you’re human: <input name="bot-field" />
-        </label>
-      </p>
-
-      {/* Hidden inputs for all form fields for Netlify */}
-      <input type="hidden" name="scamType" value={data.scamType} readOnly />
-      <input type="hidden" name="amount" value={data.amount} readOnly />
-      <input type="hidden" name="currency" value={data.currency} readOnly />
-      <input type="hidden" name="timeline" value={data.timeline} readOnly />
-      <textarea name="description" value={data.description} className="hidden" readOnly />
-      <input type="hidden" name="transactionHashes" value={JSON.stringify(data.transactionHashes)} readOnly />
-      <input type="hidden" name="bankReferences" value={JSON.stringify(data.bankReferences)} readOnly />
-      <input type="hidden" name="contactEmail" value={data.contactEmail} readOnly />
-      <input type="hidden" name="contactPhone" value={data.contactPhone} readOnly />
-      {/* Netlify needs to see a file input. We can have a hidden one. */}
-      <input type="file" name="evidenceFiles" className="hidden" multiple />
 
 
       <Card className="w-full">
