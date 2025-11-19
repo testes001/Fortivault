@@ -36,9 +36,13 @@ export default function ContactPage() {
                 <CardContent>
                   <form
                     className="space-y-6"
-                    action={process.env.NEXT_PUBLIC_FORMSPREE_URL}
+                    name="contact"
                     method="POST"
+                    data-netlify="true"
+                    netlify-honeypot="bot-field"
                   >
+                    <input type="hidden" name="bot-field" />
+                    <input type="hidden" name="form-name" value="contact" />
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
                         <label htmlFor="firstName" className="block text-sm font-medium mb-2">
@@ -83,7 +87,6 @@ export default function ContactPage() {
                         required
                       />
                     </div>
-                    <input type="hidden" name="form_type" value="contact_form" />
                     <Button type="submit" className="w-full">
                       Send Message
                     </Button>
