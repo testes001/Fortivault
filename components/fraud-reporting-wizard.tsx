@@ -23,7 +23,7 @@ export interface WizardData {
   description: string
   transactionHashes: string[]
   bankReferences: string[]
-  evidenceFiles: File[]
+  evidenceFileUrls: string[]
   contactEmail: string
   contactPhone: string
 }
@@ -37,7 +37,7 @@ const initialData: WizardData = {
   description: "",
   transactionHashes: [],
   bankReferences: [],
-  evidenceFiles: [],
+  evidenceFileUrls: [],
   contactEmail: "",
   contactPhone: "",
 }
