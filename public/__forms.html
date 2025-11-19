@@ -3,14 +3,15 @@
   <body>
     <form name="fraud-report" data-netlify="true" hidden>
       <input type="hidden" name="form-name" value="fraud-report" />
+      <input name="fullName" type="text" />
       <input name="scamType" type="text" />
       <input name="amount" type="text" />
       <input name="currency" type="text" />
       <input name="timeline" type="text" />
       <textarea name="description"></textarea>
-      <input name="transactionHashes" type="text" />
-      <input name="bankReferences" type="text" />
-      <input name="evidenceFileUrls" type="text" />
+      <input name="transactionHashes[]" type="text" />
+      <input name="bankReferences[]" type="text" />
+      <input name="evidenceFiles" type="file" multiple />
       <input name="contactEmail" type="text" />
       <input name="contactPhone" type="text" />
     </form>

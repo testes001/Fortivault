@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { ScamTypeStep } from "@/components/wizard-steps/scam-type-step"
+import { PersonalDetailsStep } from "@/components/wizard-steps/personal-details-step"
 import { DetailsStep } from "@/components/wizard-steps/details-step"
 import { TransactionStep } from "@/components/wizard-steps/transaction-step"
 import { EvidenceStep } from "@/components/wizard-steps/evidence-step"
@@ -14,6 +15,7 @@ import { ConfirmationStep } from "@/components/wizard-steps/confirmation-step"
 import { SuccessStep } from "@/components/wizard-steps/success-step"
 
 export interface WizardData {
+  fullName: string
   scamType: string
   amount: string
   currency: string
@@ -27,6 +29,7 @@ export interface WizardData {
 }
 
 const initialData: WizardData = {
+  fullName: "",
   scamType: "",
   amount: "",
   currency: "",
@@ -41,6 +44,7 @@ const initialData: WizardData = {
 
 const steps = [
   { title: "Scam Type", description: "Select the type of fraud" },
+  { title: "Personal Details", description: "Provide your contact information" },
   { title: "Details", description: "Provide incident details" },
   { title: "Transactions", description: "Add transaction references" },
   { title: "Evidence", description: "Upload supporting files" },
@@ -76,6 +80,7 @@ export function FraudReportingWizard() {
 
     const formData = new FormData()
     formData.append("form-name", "fraud-report")
+    formData.append("fullName", data.fullName)
     formData.append("scamType", data.scamType)
     formData.append("amount", data.amount)
     formData.append("currency", data.currency)
@@ -83,9 +88,16 @@ export function FraudReportingWizard() {
     formData.append("description", data.description)
     formData.append("contactEmail", data.contactEmail)
     formData.append("contactPhone", data.contactPhone)
-    formData.append("transactionHashes", JSON.stringify(data.transactionHashes))
-    formData.append("bankReferences", JSON.stringify(data.bankReferences))
-    formData.append("evidenceFileUrls", JSON.stringify(data.evidenceFileUrls))
+
+    data.transactionHashes.forEach((hash) => {
+      formData.append("transactionHashes[]", hash)
+    })
+    data.bankReferences.forEach((ref) => {
+      formData.append("bankReferences[]", ref)
+    })
+    data.evidenceFiles.forEach((file) => {
+      formData.append("evidenceFiles", file)
+    })
 
     try {
       const response = await fetch("/", {
@@ -113,13 +125,15 @@ export function FraudReportingWizard() {
       case 0:
         return data.scamType !== ""
       case 1:
-        return data.amount && data.currency && data.timeline && data.description
+        return data.fullName !== "" && data.contactEmail !== ""
       case 2:
-        return true
+        return data.amount && data.currency && data.timeline && data.description
       case 3:
-        return data.evidenceFileUrls.length > 0
+        return true
       case 4:
-        return data.contactEmail !== ""
+        return data.evidenceFiles.length > 0
+      case 5:
+        return true // Confirmation step has no validation
       default:
         return false
     }
@@ -170,10 +184,11 @@ export function FraudReportingWizard() {
               transition={{ duration: 0.3 }}
             >
               {currentStep === 0 && <ScamTypeStep data={data} updateData={updateData} />}
-              {currentStep === 1 && <DetailsStep data={data} updateData={updateData} />}
-              {currentStep === 2 && <TransactionStep data={data} updateData={updateData} />}
-              {currentStep === 3 && <EvidenceStep data={data} updateData={updateData} />}
-              {currentStep === 4 && <ConfirmationStep data={data} updateData={updateData} />}
+              {currentStep === 1 && <PersonalDetailsStep data={data} updateData={updateData} />}
+              {currentStep === 2 && <DetailsStep data={data} updateData={updateData} />}
+              {currentStep === 3 && <TransactionStep data={data} updateData={updateData} />}
+              {currentStep === 4 && <EvidenceStep data={data} updateData={updateData} />}
+              {currentStep === 5 && <ConfirmationStep data={data} updateData={updateData} />}
             </motion.div>
           </AnimatePresence>
 
