@@ -94,10 +94,14 @@ const handler: Handler = async (event: HandlerEvent) => {
       userAgent: event.headers["user-agent"] || "unknown",
     }
 
-    console.log("Fraud report submission received:", submission)
+    // Log submission with clear formatting for Netlify dashboard
+    logFormSubmission(submission)
 
     return {
       statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         message: "Form submitted successfully",
         caseId,
