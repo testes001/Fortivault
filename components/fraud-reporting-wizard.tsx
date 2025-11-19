@@ -75,15 +75,74 @@ export function FraudReportingWizard() {
   }
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    // Don't prevent default - let Netlify Forms handle the submission
+    e.preventDefault()
     setIsSubmitting(true)
     
     // Generate case ID for user display
     const generatedCaseId = `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
     setCaseId(generatedCaseId)
     
-    // Show success state immediately since Netlify will handle the form
-    setIsSubmitted(true)
+    // Update hidden form fields with current data before submission
+    const form = e.currentTarget
+    const hiddenFields = form.querySelectorAll('input[type="hidden"]')
+    
+    hiddenFields.forEach((field: any) => {
+      switch (field.name) {
+        case 'fullName':
+          field.value = data.fullName
+          break
+        case 'scamType':
+          field.value = data.scamType
+          break
+        case 'amount':
+          field.value = data.amount
+          break
+        case 'currency':
+          field.value = data.currency
+          break
+        case 'timeline':
+          field.value = data.timeline
+          break
+        case 'description':
+          field.value = data.description
+          break
+        case 'contactEmail':
+          field.value = data.contactEmail
+          break
+        case 'contactPhone':
+          field.value = data.contactPhone
+          break
+        case 'transactionHashes':
+          field.value = data.transactionHashes.join(', ')
+          break
+        case 'bankReferences':
+          field.value = data.bankReferences.join(', ')
+          break
+        case 'evidenceFileCount':
+          field.value = data.evidenceFiles.length.toString()
+          break
+        case 'evidenceFileNames':
+          field.value = data.evidenceFiles.map(f => f.name).join(', ')
+          break
+      }
+    })
+    
+    // Submit form naturally to Netlify
+    const formData = new FormData(form)
+    
+    fetch('/', {
+      method: 'POST',
+      body: formData
+    })
+    .then(() => {
+      // Show success state
+      setIsSubmitted(true)
+    })
+    .catch((error) => {
+      console.error('Form submission error:', error)
+      setIsSubmitting(false)
+      // You could add error handling here
+    })
   }
 
   const canProceed = () => {
