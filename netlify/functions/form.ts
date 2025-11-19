@@ -1,5 +1,4 @@
 import { Handler, HandlerEvent } from "@netlify/functions"
-import busboy from "busboy"
 
 const handler: Handler = async (event: HandlerEvent) => {
   if (event.httpMethod !== "POST") {
@@ -12,16 +11,14 @@ const handler: Handler = async (event: HandlerEvent) => {
   try {
     const contentType = event.headers["content-type"] || ""
     let formData: Record<string, any> = {}
-    let fileCount = 0
 
-    if (contentType.includes("multipart/form-data")) {
-      formData = await parseMultipartForm(event, contentType)
-      fileCount = (formData.evidenceFiles as any[])?.length || 0
-    } else if (contentType.includes("application/json")) {
+    if (contentType.includes("application/json")) {
       formData = JSON.parse(event.body || "{}")
     } else if (contentType.includes("application/x-www-form-urlencoded")) {
       const params = new URLSearchParams(event.body)
       formData = Object.fromEntries(params)
+    } else if (contentType.includes("multipart/form-data")) {
+      formData = parseMultipartFormData(event.body || "", contentType)
     }
 
     const formName = formData["form-name"]
@@ -44,6 +41,19 @@ const handler: Handler = async (event: HandlerEvent) => {
     const timestamp = new Date().toISOString()
     const caseId = `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
 
+    // Extract transaction hashes and bank references as arrays
+    const transactionHashes = Array.isArray(formData["transactionHashes[]"])
+      ? formData["transactionHashes[]"]
+      : formData["transactionHashes[]"]
+        ? [formData["transactionHashes[]"]]
+        : []
+
+    const bankReferences = Array.isArray(formData["bankReferences[]"])
+      ? formData["bankReferences[]"]
+      : formData["bankReferences[]"]
+        ? [formData["bankReferences[]"]]
+        : []
+
     const submission = {
       formName,
       caseId,
@@ -55,23 +65,16 @@ const handler: Handler = async (event: HandlerEvent) => {
       timeline: formData.timeline,
       description: formData.description,
       contactPhone: formData.contactPhone,
-      transactionHashesCount: (formData.transactionHashes as any[])?.length || 0,
-      bankReferencesCount: (formData.bankReferences as any[])?.length || 0,
-      filesUploaded: fileCount,
+      transactionHashes,
+      bankReferences,
+      filesUploaded: formData.fileCount || 0,
+      fileNames: formData.fileNames || [],
       timestamp,
       ip: event.headers["client-ip"] || event.headers["x-forwarded-for"] || "unknown",
       userAgent: event.headers["user-agent"] || "unknown",
     }
 
     console.log("Fraud report submission received:", submission)
-
-    // Store submission metadata (without files due to serverless limitations)
-    // In production, you would store this in a database
-    const submissionRecord = {
-      ...submission,
-      fileNames: formData.fileNames || [],
-    }
-    console.log("Submission record:", submissionRecord)
 
     return {
       statusCode: 200,
@@ -93,55 +96,61 @@ const handler: Handler = async (event: HandlerEvent) => {
   }
 }
 
-function parseMultipartForm(event: HandlerEvent, contentType: string): Promise<Record<string, any>> {
-  return new Promise((resolve, reject) => {
-    const bb = busboy({ headers: { "content-type": contentType } })
-    const formData: Record<string, any> = {}
-    const fileNames: string[] = []
+function parseMultipartFormData(body: string, contentType: string): Record<string, any> {
+  const formData: Record<string, any> = {}
+  const fileNames: string[] = []
 
-    bb.on("file", (fieldname, file, info) => {
-      const chunks: Buffer[] = []
-      file.on("data", (data) => {
-        chunks.push(Buffer.from(data))
-      })
-      file.on("end", () => {
-        if (!formData[fieldname]) {
-          formData[fieldname] = []
-        }
-        formData[fieldname].push({
-          filename: info.filename,
-          size: Buffer.concat(chunks).length,
-        })
-        fileNames.push(info.filename)
-      })
-      file.on("error", reject)
-    })
+  // Extract boundary from content-type
+  const boundaryMatch = contentType.match(/boundary=([^;]+)/)
+  if (!boundaryMatch) {
+    return formData
+  }
 
-    bb.on("field", (fieldname, val) => {
-      if (fieldname.endsWith("[]")) {
-        const baseFieldname = fieldname.slice(0, -2)
-        if (!formData[baseFieldname]) {
-          formData[baseFieldname] = []
-        }
-        formData[baseFieldname].push(val)
-      } else {
-        formData[fieldname] = val
+  const boundary = boundaryMatch[1].trim()
+  const parts = body.split(`--${boundary}`)
+
+  for (const part of parts) {
+    if (!part || part === "--\r\n" || part === "--") continue
+
+    const headerEnd = part.indexOf("\r\n\r\n")
+    if (headerEnd === -1) continue
+
+    const headers = part.substring(0, headerEnd)
+    const content = part.substring(headerEnd + 4).replace(/\r\n$/, "")
+
+    // Parse field name
+    const nameMatch = headers.match(/name="([^"]+)"/)
+    if (!nameMatch) continue
+
+    const fieldName = nameMatch[1]
+
+    // Check if it's a file
+    const filenameMatch = headers.match(/filename="([^"]+)"/)
+    if (filenameMatch) {
+      const filename = filenameMatch[1]
+      fileNames.push(filename)
+      if (!formData.fileCount) {
+        formData.fileCount = 0
       }
-    })
-
-    bb.on("error", reject)
-    bb.on("close", () => {
-      formData.fileNames = fileNames
-      resolve(formData)
-    })
-
-    if (event.isBase64Encoded) {
-      bb.write(Buffer.from(event.body || "", "base64"))
+      formData.fileCount++
     } else {
-      bb.write(event.body || "")
+      // Regular field
+      if (fieldName.endsWith("[]")) {
+        const baseFieldName = fieldName.slice(0, -2)
+        if (!formData[fieldName]) {
+          formData[fieldName] = []
+        }
+        if (Array.isArray(formData[fieldName])) {
+          formData[fieldName].push(content)
+        }
+      } else {
+        formData[fieldName] = content
+      }
     }
-    bb.end()
-  })
+  }
+
+  formData.fileNames = fileNames
+  return formData
 }
 
 export { handler }
