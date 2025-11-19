@@ -131,7 +131,7 @@ export function FraudReportingWizard() {
       case 3:
         return true
       case 4:
-        return data.evidenceFiles.length > 0
+        return true
       case 5:
         return true // Confirmation step has no validation
       default:
