@@ -1,5 +1,25 @@
 import { Handler, HandlerEvent } from "@netlify/functions"
 
+interface SubmissionRecord {
+  caseId: string
+  formName: string
+  fullName: string
+  email: string
+  scamType: string
+  amount?: string
+  currency?: string
+  timeline?: string
+  description?: string
+  contactPhone?: string
+  transactionHashes: string[]
+  bankReferences: string[]
+  filesUploaded: number
+  fileNames: string[]
+  timestamp: string
+  ip: string
+  userAgent: string
+}
+
 const handler: Handler = async (event: HandlerEvent) => {
   if (event.httpMethod !== "POST") {
     return {
