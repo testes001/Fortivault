@@ -86,8 +86,8 @@ export function FraudReportingWizard() {
     formData.append("transactionHashes", JSON.stringify(data.transactionHashes))
     formData.append("bankReferences", JSON.stringify(data.bankReferences))
 
-    data.evidenceFiles.forEach((file, index) => {
-      formData.append(`evidenceFile_${index}`, file)
+    data.evidenceFiles.forEach((file) => {
+      formData.append("evidenceFiles", file)
     })
 
     try {
