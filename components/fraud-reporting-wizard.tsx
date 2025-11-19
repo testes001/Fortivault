@@ -74,50 +74,16 @@ export function FraudReportingWizard() {
     }
   }
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    // Don't prevent default - let Netlify Forms handle the submission
     setIsSubmitting(true)
-
-    const formData = new FormData()
-    formData.append("form-name", "fraud-report")
-    formData.append("fullName", data.fullName)
-    formData.append("scamType", data.scamType)
-    formData.append("amount", data.amount)
-    formData.append("currency", data.currency)
-    formData.append("timeline", data.timeline)
-    formData.append("description", data.description)
-    formData.append("contactEmail", data.contactEmail)
-    formData.append("contactPhone", data.contactPhone)
-
-    data.transactionHashes.forEach((hash) => {
-      formData.append("transactionHashes[]", hash)
-    })
-    data.bankReferences.forEach((ref) => {
-      formData.append("bankReferences[]", ref)
-    })
-    data.evidenceFiles.forEach((file) => {
-      formData.append("evidenceFiles[]", file as any)
-    })
-
-    try {
-      const response = await fetch("/.netlify/functions/form", {
-        method: "POST",
-        body: formData,
-      })
-
-      if (!response.ok) {
-        throw new Error("Form submission failed")
-      }
-
-      const result = await response.json()
-      setCaseId(result.caseId || `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`)
-      setIsSubmitted(true)
-    } catch (error) {
-      console.error("Form submission error:", error)
-      alert("There was an error submitting your report. Please try again.")
-    } finally {
-      setIsSubmitting(false)
-    }
+    
+    // Generate case ID for user display
+    const generatedCaseId = `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+    setCaseId(generatedCaseId)
+    
+    // Show success state immediately since Netlify will handle the form
+    setIsSubmitted(true)
   }
 
   const canProceed = () => {
@@ -146,9 +112,23 @@ export function FraudReportingWizard() {
   const progress = ((currentStep + 1) / steps.length) * 100
 
   return (
-    <form name="fraud-report" data-netlify="true" onSubmit={handleSubmit} netlify-honeypot="bot-field">
+    <form name="fraud-report" method="POST" data-netlify="true" onSubmit={handleSubmit} netlify-honeypot="bot-field">
       <input type="hidden" name="bot-field" />
       <input type="hidden" name="form-name" value="fraud-report" />
+      
+      {/* Hidden fields to capture all wizard data for Netlify Forms */}
+      <input type="hidden" name="fullName" value={data.fullName} />
+      <input type="hidden" name="scamType" value={data.scamType} />
+      <input type="hidden" name="amount" value={data.amount} />
+      <input type="hidden" name="currency" value={data.currency} />
+      <input type="hidden" name="timeline" value={data.timeline} />
+      <input type="hidden" name="description" value={data.description} />
+      <input type="hidden" name="contactEmail" value={data.contactEmail} />
+      <input type="hidden" name="contactPhone" value={data.contactPhone} />
+      <input type="hidden" name="transactionHashes" value={data.transactionHashes.join(', ')} />
+      <input type="hidden" name="bankReferences" value={data.bankReferences.join(', ')} />
+      <input type="hidden" name="evidenceFileCount" value={data.evidenceFiles.length.toString()} />
+      <input type="hidden" name="evidenceFileNames" value={data.evidenceFiles.map(f => f.name).join(', ')} />
 
       <Card className="w-full">
         <CardHeader>

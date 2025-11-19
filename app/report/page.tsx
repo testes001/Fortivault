@@ -32,9 +32,10 @@ export default function ReportPage() {
               <textarea name="description"></textarea>
               <input type="email" name="contactEmail" />
               <input type="tel" name="contactPhone" />
-              <input type="text" name="transactionHashes[]" />
-              <input type="text" name="bankReferences[]" />
-              <input type="file" name="evidenceFiles[]" multiple />
+              <input type="text" name="transactionHashes" />
+              <input type="text" name="bankReferences" />
+              <input type="text" name="evidenceFileCount" />
+              <input type="text" name="evidenceFileNames" />
             </form>
 
             <FraudReportingWizard />
