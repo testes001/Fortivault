@@ -16,34 +16,37 @@ interface EvidenceStepProps {
 
 export function EvidenceStep({ data, updateData }: EvidenceStepProps) {
   const handleFileUpload = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files || [])
-      updateData({
-        evidenceFiles: [...data.evidenceFiles, ...files],
-      })
+      const uploadedUrls = [...data.evidenceFileUrls]
+
+      for (const file of files) {
+        const formData = new FormData()
+        formData.append("file", file)
+
+        try {
+          const response = await fetch("https://file.io", {
+            method: "POST",
+            body: formData,
+          })
+          const result = await response.json()
+          if (result.success) {
+            uploadedUrls.push(result.link)
+          }
+        } catch (error) {
+          console.error("File upload error:", error)
+        }
+      }
+
+      updateData({ evidenceFileUrls: uploadedUrls })
     },
-    [data.evidenceFiles, updateData],
+    [data.evidenceFileUrls, updateData],
   )
 
   const removeFile = (index: number) => {
     updateData({
-      evidenceFiles: data.evidenceFiles.filter((_, i) => i !== index),
+      evidenceFileUrls: data.evidenceFileUrls.filter((_, i) => i !== index),
     })
-  }
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-  }
-
-  const getFileIcon = (file: File) => {
-    if (file.type.startsWith("image/")) {
-      return <ImageIcon className="w-4 h-4" />
-    }
-    return <ImageIcon className="w-4 h-4" />
   }
 
   return (
@@ -81,20 +84,19 @@ export function EvidenceStep({ data, updateData }: EvidenceStepProps) {
         </CardContent>
       </Card>
 
-      {data.evidenceFiles.length > 0 && (
+      {data.evidenceFileUrls.length > 0 && (
         <div className="space-y-4">
-          <Label>Uploaded Files ({data.evidenceFiles.length}):</Label>
+          <Label>Uploaded File Links ({data.evidenceFileUrls.length}):</Label>
           <div className="space-y-2">
-            {data.evidenceFiles.map((file, index) => (
+            {data.evidenceFileUrls.map((url, index) => (
               <Card key={index}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      {getFileIcon(file)}
-                      <div>
-                        <p className="font-medium">{file.name}</p>
-                        <p className="text-sm text-muted-foreground">{formatFileSize(file.size)}</p>
-                      </div>
+                      <ImageIcon className="w-4 h-4" />
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="font-medium truncate">
+                        {url}
+                      </a>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => removeFile(index)}>
                       <X className="w-4 h-4" />
