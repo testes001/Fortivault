@@ -12,12 +12,10 @@
 # Fraud Report Form Configuration
 [[forms]]
   name = "fraud-report"
-  action = "/.netlify/functions/form"
 
-# Contact Form Configuration
+# Contact Form Configuration  
 [[forms]]
   name = "contact"
-  action = "/.netlify/functions/contact"
 
 # Email notification for contact form (optional - requires Netlify account)
 [context.production.forms]
