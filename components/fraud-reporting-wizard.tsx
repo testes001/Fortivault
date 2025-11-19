@@ -109,8 +109,8 @@ export function FraudReportingWizard() {
         throw new Error("Form submission failed")
       }
 
-      const generatedCaseId = `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
-      setCaseId(generatedCaseId)
+      const result = await response.json()
+      setCaseId(result.caseId || `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`)
       setIsSubmitted(true)
     } catch (error) {
       console.error("Form submission error:", error)
@@ -133,7 +133,7 @@ export function FraudReportingWizard() {
       case 4:
         return true
       case 5:
-        return true // Confirmation step has no validation
+        return true
       default:
         return false
     }
@@ -146,16 +146,8 @@ export function FraudReportingWizard() {
   const progress = ((currentStep + 1) / steps.length) * 100
 
   return (
-    <form
-      name="fraud-report"
-      onSubmit={handleSubmit}
-    >
+    <form name="fraud-report" onSubmit={handleSubmit}>
       <input type="hidden" name="form-name" value="fraud-report" />
-      <p className="hidden">
-        <label>
-          Don’t fill this out if you’re human: <input name="bot-field" />
-        </label>
-      </p>
 
       <Card className="w-full">
         <CardHeader>
