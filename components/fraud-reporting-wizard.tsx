@@ -74,51 +74,60 @@ export function FraudReportingWizard() {
     }
   }
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
-    // Generate case ID for user display
+
     const generatedCaseId = `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
     setCaseId(generatedCaseId)
-    
-    // Create FormData with all wizard data for Netlify Forms
+
     const formData = new FormData()
-    formData.append('form-name', 'fraud-report') // Required for Netlify AJAX submissions
-    formData.append('bot-field', '') // Honeypot field - must remain empty
+
+    // Web3Forms access key
+    formData.append('access_key', '8b7b966f-b99c-44bd-ae50-fee2a626402f')
+
+    // Email settings
+    formData.append('subject', `New Fraud Report Submitted: ${generatedCaseId}`)
+    formData.append('from_name', 'Fortivault Cybercure')
+    formData.append('reply_to', data.contactEmail)
+    formData.append('email_to', 'hybe.corp@zohomail.com, fortivaultcybercure@gmail.com')
+
+    // Append form data
+    formData.append('caseId', generatedCaseId)
     formData.append('fullName', data.fullName)
     formData.append('scamType', data.scamType)
-    formData.append('amount', data.amount)
-    formData.append('currency', data.currency)
+    formData.append('amount', `${data.amount} ${data.currency}`)
     formData.append('timeline', data.timeline)
     formData.append('description', data.description)
     formData.append('contactEmail', data.contactEmail)
     formData.append('contactPhone', data.contactPhone)
-    formData.append('transactionHashes', data.transactionHashes.join(', '))
-    formData.append('bankReferences', data.bankReferences.join(', '))
+    formData.append('transactionHashes', data.transactionHashes.join('\n'))
+    formData.append('bankReferences', data.bankReferences.join('\n'))
 
-    // Append actual files for Netlify to process
+    // Append file attachments
     data.evidenceFiles.forEach(file => {
-      formData.append('evidenceFiles[]', file)
+      formData.append('attachment', file)
     })
 
-    formData.append('caseId', generatedCaseId)
-    
-    // Submit to root path where static form blueprint exists
-    // The browser will automatically set the Content-Type to multipart/form-data
-    fetch('/', {
-      method: 'POST',
-      body: formData
-    })
-    .then(() => {
-      // Show success state
-      setIsSubmitted(true)
-    })
-    .catch((error) => {
+    try {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setIsSubmitted(true)
+      } else {
+        console.error('Form submission error:', result.message)
+        // You could add error handling here
+        setIsSubmitting(false)
+      }
+    } catch (error) {
       console.error('Form submission error:', error)
       setIsSubmitting(false)
-      // You could add error handling here
-    })
+    }
   }
 
   const canProceed = () => {

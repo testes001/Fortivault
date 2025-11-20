@@ -8,16 +8,3 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-
-# Fraud Report Form Configuration
-[[forms]]
-  name = "fraud-report"
-
-# Contact Form Configuration  
-[[forms]]
-  name = "contact"
-
-# Email notification for contact form (optional - requires Netlify account)
-[context.production.forms]
-  contact = { notification_email = "notifications@example.com" }
-  fraud-report = { notification_email = "notifications@example.com" }
