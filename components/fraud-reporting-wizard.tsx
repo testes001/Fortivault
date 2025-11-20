@@ -106,7 +106,7 @@ export function FraudReportingWizard() {
 
     // Append file attachments
     data.evidenceFiles.forEach(file => {
-      formData.append('attachment', file)
+      formData.append('attachment[]', file)
     })
 
     try {
@@ -120,12 +120,12 @@ export function FraudReportingWizard() {
       if (result.success) {
         setIsSubmitted(true)
       } else {
-        console.error('Form submission error:', result.message)
+        console.error("Web3Forms API Error:", result)
         // You could add error handling here
         setIsSubmitting(false)
       }
     } catch (error) {
-      console.error('Form submission error:', error)
+      console.error("Fetch API Error:", error)
       setIsSubmitting(false)
     }
   }
