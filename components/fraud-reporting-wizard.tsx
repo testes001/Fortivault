@@ -84,7 +84,7 @@ export function FraudReportingWizard() {
     
     // Create FormData with all wizard data for Netlify Forms
     const formData = new FormData()
-    formData.append('form-name', 'fraud-report')
+    formData.append('form-name', 'fraud-report') // Required for Netlify AJAX submissions
     formData.append('bot-field', '') // Honeypot field - must remain empty
     formData.append('fullName', data.fullName)
     formData.append('scamType', data.scamType)
@@ -96,12 +96,16 @@ export function FraudReportingWizard() {
     formData.append('contactPhone', data.contactPhone)
     formData.append('transactionHashes', data.transactionHashes.join(', '))
     formData.append('bankReferences', data.bankReferences.join(', '))
-    formData.append('evidenceFileCount', data.evidenceFiles.length.toString())
-    formData.append('evidenceFileNames', data.evidenceFiles.map(f => f.name).join(', '))
+
+    // Append actual files for Netlify to process
+    data.evidenceFiles.forEach(file => {
+      formData.append('evidenceFiles[]', file)
+    })
+
     formData.append('caseId', generatedCaseId)
-    formData.append('submissionDate', new Date().toISOString())
     
     // Submit to root path where static form blueprint exists
+    // The browser will automatically set the Content-Type to multipart/form-data
     fetch('/', {
       method: 'POST',
       body: formData

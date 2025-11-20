@@ -30,10 +30,8 @@ export default function ReportPage() {
               <input type="tel" name="contactPhone" />
               <input type="text" name="transactionHashes" />
               <input type="text" name="bankReferences" />
-              <input type="text" name="evidenceFileCount" />
-              <input type="text" name="evidenceFileNames" />
+              <input type="file" name="evidenceFiles[]" multiple />
               <input type="text" name="caseId" />
-              <input type="text" name="submissionDate" />
             </form>
 
           </div>
