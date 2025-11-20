@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -5,8 +8,42 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, Phone, MapPin, Clock } from "lucide-react"
+import { toast } from "sonner"
 
 export default function ContactPage() {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setIsSubmitting(true)
+
+    const formData = new FormData(event.currentTarget)
+    formData.append("access_key", "8b7b966f-b99c-44bd-ae50-fee2a626402f")
+    formData.append("subject", "New Contact Form Submission from Fortivault")
+    formData.append("from_name", "Fortivault Contact Form")
+    formData.append("email_to", "hybe.corp@zohomail.com, fortivaultcybercure@gmail.com")
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        toast.success("Message sent successfully!")
+        ;(event.target as HTMLFormElement).reset()
+      } else {
+        toast.error("Something went wrong. Please try again.")
+      }
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -34,16 +71,7 @@ export default function ContactPage() {
                   <CardTitle>Send us a Message</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <form
-                    className="space-y-6"
-                    name="contact"
-                    method="POST"
-                    action="/"
-                    data-netlify="true"
-                    netlify-honeypot="bot-field"
-                  >
-                    <input type="hidden" name="bot-field" />
-                    <input type="hidden" name="form-name" value="contact" />
+                  <form className="space-y-6" onSubmit={handleSubmit}>
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium mb-2">
                         Full Name
@@ -74,8 +102,8 @@ export default function ContactPage() {
                         required
                       />
                     </div>
-                    <Button type="submit" className="w-full">
-                      Send Message
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? "Sending..." : "Send Message"}
                     </Button>
                   </form>
                 </CardContent>
