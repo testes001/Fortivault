@@ -16,6 +16,26 @@ export default function ReportPage() {
               </p>
             </div>
             <FraudReportingWizard />
+
+            {/* Netlify hidden form */}
+            <form name="fraud-report" data-netlify="true" netlify-honeypot="bot-field" hidden>
+              <input type="hidden" name="form-name" value="fraud-report" />
+              <input type="text" name="fullName" />
+              <input type="text" name="scamType" />
+              <input type="text" name="amount" />
+              <input type="text" name="currency" />
+              <input type="text" name="timeline" />
+              <textarea name="description"></textarea>
+              <input type="email" name="contactEmail" />
+              <input type="tel" name="contactPhone" />
+              <input type="text" name="transactionHashes" />
+              <input type="text" name="bankReferences" />
+              <input type="text" name="evidenceFileCount" />
+              <input type="text" name="evidenceFileNames" />
+              <input type="text" name="caseId" />
+              <input type="text" name="submissionDate" />
+            </form>
+
           </div>
         </div>
       </main>
