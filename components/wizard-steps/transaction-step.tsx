@@ -106,15 +106,25 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
           </p>
         </div>
 
+        {errors.hash && (
+          <Alert variant="destructive" role="alert">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{errors.hash}</AlertDescription>
+          </Alert>
+        )}
+
         <div className="space-y-4">
           <div className="flex gap-2">
             <Input
               placeholder="Enter transaction hash (TXID)"
               value={newHash}
-              onChange={(e) => setNewHash(e.target.value)}
+              onChange={(e) => {
+                setNewHash(e.target.value)
+                if (errors.hash) setErrors({})
+              }}
               onKeyPress={(e) => e.key === "Enter" && addTransactionHash()}
               aria-labelledby="crypto-heading"
-              aria-describedby="crypto-hint"
+              aria-describedby={errors.hash ? "crypto-error" : "crypto-hint"}
               className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
             />
             <Button
@@ -126,9 +136,15 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
               <Plus className="w-4 h-4" aria-hidden="true" />
             </Button>
           </div>
-          <p id="crypto-hint" className="text-xs text-muted-foreground">
-            Press Enter or click Add to include a transaction hash
-          </p>
+          {errors.hash ? (
+            <p id="crypto-error" className="text-xs text-red-500" role="alert">
+              {errors.hash}
+            </p>
+          ) : (
+            <p id="crypto-hint" className="text-xs text-muted-foreground">
+              Press Enter or click Add to include a transaction hash (64 hex characters)
+            </p>
+          )}
 
           {data.transactionHashes.length > 0 && (
             <div className="space-y-2">
