@@ -26,15 +26,33 @@ export function PersonalDetailsStep({ data, updateData, showError = false }: Per
 
   const handleEmailChange = (value: string) => {
     updateData({ contactEmail: value })
-    if (errors.contactEmail && validateEmail(value)) {
+
+    if (value && !validateEmail(value)) {
+      setErrors({ ...errors, contactEmail: "Please enter a valid email address" })
+    } else {
       setErrors({ ...errors, contactEmail: "" })
+    }
+  }
+
+  const handleEmailBlur = (value: string) => {
+    if (value && !validateEmail(value)) {
+      setErrors({ ...errors, contactEmail: "Please enter a valid email address" })
     }
   }
 
   const handlePhoneChange = (value: string) => {
     updateData({ contactPhone: value })
-    if (errors.contactPhone && (value.trim().length === 0 || validatePhone(value))) {
+
+    if (value.trim().length > 0 && !validatePhone(value)) {
+      setErrors({ ...errors, contactPhone: "Invalid phone format. Must be at least 10 digits" })
+    } else {
       setErrors({ ...errors, contactPhone: "" })
+    }
+  }
+
+  const handlePhoneBlur = (value: string) => {
+    if (value.trim().length > 0 && !validatePhone(value)) {
+      setErrors({ ...errors, contactPhone: "Invalid phone format. Must be at least 10 digits" })
     }
   }
 
