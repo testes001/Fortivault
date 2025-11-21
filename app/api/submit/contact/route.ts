@@ -213,9 +213,20 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error("[Contact API] Error:", error)
+    const errorMsg = error instanceof Error ? error.message : "Unknown error"
+    console.error("[Contact API] Unexpected error:", {
+      error: errorMsg,
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
+      stack: error instanceof Error ? error.stack : undefined,
+      clientIp,
+      timestamp: new Date().toISOString(),
+    })
     return NextResponse.json(
-      { success: false, message: "Internal server error. Please try again later." },
+      {
+        success: false,
+        message: "An unexpected error occurred. Please try again later.",
+        code: "INTERNAL_SERVER_ERROR",
+      },
       { status: 500 }
     )
   }
