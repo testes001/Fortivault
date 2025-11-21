@@ -74,9 +74,15 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json()
     } catch (error) {
-      console.error("[Fraud Report API] Error parsing JSON:", error)
+      const errorMsg = error instanceof Error ? error.message : "Unknown parsing error"
+      console.error("[Fraud Report API] Error parsing JSON:", errorMsg)
       return NextResponse.json(
-        { success: false, message: "Invalid JSON payload." },
+        {
+          success: false,
+          message: "Invalid request format. Please ensure you are sending valid JSON.",
+          code: "INVALID_JSON",
+          details: "The request body could not be parsed as JSON.",
+        },
         { status: 400 }
       )
     }
