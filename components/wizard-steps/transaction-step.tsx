@@ -199,6 +199,15 @@ export function TransactionStep({ data, updateData, showError = false }: Transac
         </p>
       </div>
 
+      {showError && data.bankReferences.length === 0 && (
+        <Alert variant="destructive" role="alert">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Please add at least one bank reference to continue
+          </AlertDescription>
+        </Alert>
+      )}
+
       {errors.reference && (
         <Alert variant="destructive" role="alert">
           <AlertCircle className="h-4 w-4" />
