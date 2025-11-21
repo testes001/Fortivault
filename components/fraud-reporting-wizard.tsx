@@ -141,10 +141,6 @@ export function FraudReportingWizard() {
       // Create FormData to handle file uploads
       const formData = new FormData()
 
-      // Web3Forms requires access_key
-      formData.append("access_key", "8b7b966f-b99c-44bd-ae50-fee2a626402f")
-      formData.append("form_name", "fraud-report")
-
       // Add form fields
       formData.append("fullName", data.fullName)
       formData.append("contactEmail", data.contactEmail)
@@ -164,18 +160,15 @@ export function FraudReportingWizard() {
         formData.append("files", file)
       })
 
-      const response = await fetch("https://api.web3forms.com/submit", {
+      const response = await fetch("/api/submit/fraud-report", {
         method: "POST",
         body: formData,
-        // Don't set Content-Type header - browser will set it with correct boundary
       })
 
       const result = await response.json()
 
       if (result.success) {
-        // Generate a local case ID for confirmation (Web3Forms stores submission)
-        const localCaseId = `CSRU-${Date.now().toString(36).toUpperCase()}`
-        setCaseId(localCaseId)
+        setCaseId(result.caseId)
         setIsSubmitted(true)
       } else {
         const errorMessage =
