@@ -107,7 +107,7 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="text-center">
+      <Card className="text-center" role="region" aria-labelledby="success-title">
         <CardContent className="p-8 space-y-6">
           <motion.div
             initial={{ scale: 0 }}
