@@ -100,21 +100,13 @@ export function TransactionStep({ data, updateData, showError = false }: Transac
       <div className="space-y-6">
         <div>
           <h3 className="text-lg font-semibold mb-4" id="crypto-heading">
-            Cryptocurrency Transaction Information <span className="text-red-500" aria-label="required">*</span>
+            Cryptocurrency Transaction Information
           </h3>
           <p className="text-muted-foreground mb-4">
-            Provide at least one transaction hash (TXID) related to the fraudulent transfers.
+            Provide transaction hash(es) (TXID) related to the fraudulent transfers if available.
           </p>
         </div>
 
-        {showError && data.transactionHashes.length === 0 && (
-          <Alert variant="destructive" role="alert">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Please add at least one transaction hash to continue
-            </AlertDescription>
-          </Alert>
-        )}
 
         {errors.hash && (
           <Alert variant="destructive" role="alert">
@@ -192,21 +184,13 @@ export function TransactionStep({ data, updateData, showError = false }: Transac
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-4" id="bank-heading">
-          Bank Transfer Information <span className="text-red-500" aria-label="required">*</span>
+          Bank Transfer Information
         </h3>
         <p className="text-muted-foreground mb-4">
-          Provide at least one bank transfer reference, wire transfer number, or payment confirmation number.
+          Provide bank transfer reference, wire transfer number, or payment confirmation number if available.
         </p>
       </div>
 
-      {showError && data.bankReferences.length === 0 && (
-        <Alert variant="destructive" role="alert">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Please add at least one bank reference to continue
-          </AlertDescription>
-        </Alert>
-      )}
 
       {errors.reference && (
         <Alert variant="destructive" role="alert">

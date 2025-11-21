@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { validateContactForm } from "@/lib/utils/validation"
+import { validateApiKey } from "@/lib/config/api-key-validator"
+import { handleWeb3FormsError } from "@/lib/config/web3forms-error-handler"
 import { rateLimiter } from "@/lib/security/rate-limiter"
 
 const RATE_LIMIT_CONFIG = {
@@ -12,34 +14,10 @@ const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit"
 
 export const runtime = "nodejs"
 
-/**
- * Validates that critical environment variables are set
- * Used for redundant checks at request time
- */
-function validateConfiguration(): { valid: boolean; error?: string } {
-  // Redundant check #1: Direct variable check
-  if (!WEB3FORMS_API_KEY) {
-    return {
-      valid: false,
-      error: "WEB3FORMS_API_KEY is not configured. Contact support if this persists.",
-    }
-  }
-
-  // Redundant check #2: Verify it's not empty after trimming
-  if (!WEB3FORMS_API_KEY.trim()) {
-    return {
-      valid: false,
-      error: "WEB3FORMS_API_KEY is empty. Please provide a valid API key.",
-    }
-  }
-
-  return { valid: true }
-}
 
 export async function POST(request: NextRequest) {
   try {
-    // Redundant configuration check
-    const configCheck = validateConfiguration()
+    const configCheck = validateApiKey(WEB3FORMS_API_KEY, "WEB3FORMS_API_KEY")
     if (!configCheck.valid) {
       console.error("[Contact API] Configuration validation failed:", configCheck.error)
       return NextResponse.json(
@@ -146,31 +124,30 @@ export async function POST(request: NextRequest) {
         {
           status: web3formsResponse.status,
           statusText: web3formsResponse.statusText,
+          response: web3formsResult,
         }
       )
 
-      let userMessage = "Unable to process your message. Please try again later."
-      if (web3formsResponse.status === 401 || web3formsResponse.status === 403) {
-        userMessage = "Server authentication failed. Please contact support."
-      } else if (web3formsResponse.status === 429) {
-        userMessage = "Too many submissions. Please wait a moment and try again."
-      } else if (web3formsResponse.status >= 500) {
-        userMessage = "The submission service is temporarily unavailable. Please try again in a few moments."
-      }
+      const errorDetails = handleWeb3FormsError(web3formsResponse.status)
 
       return NextResponse.json(
         {
           success: false,
-          message: userMessage,
-          code: "SUBMISSION_SERVICE_ERROR",
+          message: errorDetails.userMessage,
+          code: errorDetails.code,
         },
-        { status: 503 }
+        { status: errorDetails.statusCode }
       )
     }
 
     let web3formsResult: any
     try {
-      web3formsResult = await web3formsResponse.json()
+      // Ensure response body hasn't been consumed yet
+      if (!web3formsResponse.bodyUsed) {
+        web3formsResult = await web3formsResponse.json()
+      } else {
+        throw new Error("Response body was already consumed")
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Unknown error"
       console.error("[Contact API] Error parsing Web3Forms response:", {

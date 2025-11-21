@@ -71,14 +71,6 @@ export function validateFraudReport(data: {
     errors.push("Description is required")
   }
 
-  const hasTransactionRef =
-    (data.transactionHashes && data.transactionHashes.length > 0) ||
-    (data.bankReferences && data.bankReferences.length > 0)
-
-  if (!hasTransactionRef) {
-    errors.push("At least one transaction hash or bank reference is required")
-  }
-
   return {
     valid: errors.length === 0,
     errors,

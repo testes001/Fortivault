@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { validateFraudReport } from "@/lib/utils/validation"
+import { validateApiKey } from "@/lib/config/api-key-validator"
+import { handleWeb3FormsError } from "@/lib/config/web3forms-error-handler"
 import { rateLimiter } from "@/lib/security/rate-limiter"
 
 const RATE_LIMIT_CONFIG = {
@@ -24,29 +26,6 @@ const ALLOWED_FILE_TYPES = [
 
 export const runtime = "nodejs"
 
-/**
- * Validates that critical environment variables are set
- * Used for redundant checks at request time
- */
-function validateConfiguration(): { valid: boolean; error?: string } {
-  // Redundant check #1: Direct variable check
-  if (!WEB3FORMS_API_KEY) {
-    return {
-      valid: false,
-      error: "WEB3FORMS_API_KEY is not configured. Contact support if this persists.",
-    }
-  }
-
-  // Redundant check #2: Verify it's not empty after trimming
-  if (!WEB3FORMS_API_KEY.trim()) {
-    return {
-      valid: false,
-      error: "WEB3FORMS_API_KEY is empty. Please provide a valid API key.",
-    }
-  }
-
-  return { valid: true }
-}
 
 /**
  * Validates a file's size and type
@@ -75,8 +54,7 @@ export async function POST(request: NextRequest) {
   const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
 
   try {
-    // Redundant configuration check
-    const configCheck = validateConfiguration()
+    const configCheck = validateApiKey(WEB3FORMS_API_KEY, "WEB3FORMS_API_KEY")
     if (!configCheck.valid) {
       console.error("[Fraud Report API] Configuration validation failed:", configCheck.error)
       return NextResponse.json(
@@ -294,10 +272,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse web3forms response
+    // Parse web3forms response with explicit body consumption guard
     let web3formsResult: any
     try {
-      web3formsResult = await web3formsResponse.json()
+      // Ensure response body hasn't been consumed yet
+      if (!web3formsResponse.bodyUsed) {
+        web3formsResult = await web3formsResponse.json()
+      } else {
+        throw new Error("Response body was already consumed")
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Unknown error"
       console.error("[Fraud Report API] Error parsing Web3Forms response:", {
@@ -324,34 +307,15 @@ export async function POST(request: NextRequest) {
         filesSubmitted: files.length,
       })
 
-      // Specific error messages based on status
-      let userMessage = "Unable to process your submission. Please try again later."
-      let statusCode = 503
-
-      if (web3formsResponse.status === 400) {
-        userMessage = "Invalid submission data. Please check your information and try again."
-        statusCode = 400
-      } else if (web3formsResponse.status === 401 || web3formsResponse.status === 403) {
-        userMessage = "Server authentication failed. Please contact support."
-        statusCode = 503
-      } else if (web3formsResponse.status === 413) {
-        userMessage = "Files are too large. Please reduce file sizes and try again."
-        statusCode = 413
-      } else if (web3formsResponse.status === 429) {
-        userMessage = "Too many submissions. Please wait a moment and try again."
-        statusCode = 429
-      } else if (web3formsResponse.status >= 500) {
-        userMessage = "The submission service is temporarily unavailable. Please try again in a few moments."
-        statusCode = 503
-      }
+      const errorDetails = handleWeb3FormsError(web3formsResponse.status)
 
       return NextResponse.json(
         {
           success: false,
-          message: userMessage,
-          code: "SUBMISSION_SERVICE_ERROR",
+          message: errorDetails.userMessage,
+          code: errorDetails.code,
         },
-        { status: statusCode }
+        { status: errorDetails.statusCode }
       )
     }
 

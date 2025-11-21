@@ -89,9 +89,6 @@ export function FraudReportingWizard() {
     if (!data.amount || !data.currency) return "Amount and currency are required."
     if (!data.timeline) return "Timeline is required."
     if (!data.description) return "Description is required."
-    if (data.transactionHashes.length === 0 && data.bankReferences.length === 0) {
-      return "At least one transaction hash or bank reference is required."
-    }
     return null
   }
 
@@ -173,13 +170,7 @@ export function FraudReportingWizard() {
       const status = response.status
 
       try {
-        const blob = await response.blob()
-        const text = await blob.text()
-        if (text) {
-          result = JSON.parse(text)
-        } else {
-          result = { success: status === 201, message: "Empty response" }
-        }
+        result = await response.json()
       } catch (parseError) {
         console.error("Response parsing error:", parseError)
         result = {
@@ -225,7 +216,7 @@ export function FraudReportingWizard() {
       case 2:
         return data.amount && data.currency && data.timeline && data.description
       case 3:
-        return data.transactionHashes.length > 0 || data.bankReferences.length > 0
+        return true
       case 4:
         return true
       case 5:
