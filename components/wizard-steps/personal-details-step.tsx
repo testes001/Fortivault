@@ -135,6 +135,7 @@ export function PersonalDetailsStep({ data, updateData, showError = false }: Per
             placeholder="+1 (555) 123-4567"
             value={data.contactPhone}
             onChange={(e) => handlePhoneChange(e.target.value)}
+            onBlur={(e) => handlePhoneBlur(e.target.value)}
             aria-labelledby="contactPhone"
             aria-describedby={errors.contactPhone ? "contactPhone-error" : "contactPhone-hint"}
             className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
