@@ -142,7 +142,12 @@ export async function POST(request: NextRequest) {
 
     let web3formsResult: any
     try {
-      web3formsResult = await web3formsResponse.json()
+      // Ensure response body hasn't been consumed yet
+      if (!web3formsResponse.bodyUsed) {
+        web3formsResult = await web3formsResponse.json()
+      } else {
+        throw new Error("Response body was already consumed")
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Unknown error"
       console.error("[Contact API] Error parsing Web3Forms response:", {
