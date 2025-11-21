@@ -1,3 +1,8 @@
+import { validateStartup } from "./lib/config/startup-check.js"
+
+// Run startup validation before Next.js initializes
+const validationResult = validateStartup()
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
