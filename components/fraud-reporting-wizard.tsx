@@ -88,6 +88,11 @@ export function FraudReportingWizard() {
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+        // Debug: Log access key and form data
+        console.log('Web3Forms Access Key:', process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY)
+        for (let pair of formData.entries()) {
+          console.log(pair[0]+ ': ' + pair[1])
+        }
     e.preventDefault()
     setSubmissionError("")
     const validationError = validateForm()
@@ -138,9 +143,8 @@ export function FraudReportingWizard() {
         method: 'POST',
         body: formData,
       })
-
       const result = await response.json()
-
+      console.log('Web3Forms API Response:', result)
       if (result.success) {
         setIsSubmitted(true)
       } else {
@@ -148,6 +152,7 @@ export function FraudReportingWizard() {
         setIsSubmitting(false)
       }
     } catch (error) {
+      console.error('Web3Forms Fetch Error:', error)
       setSubmissionError("Network error. Please check your connection and try again.")
       setIsSubmitting(false)
     }
