@@ -272,14 +272,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse web3forms response with explicit body consumption guard
+    // Check for web3forms response errors BEFORE parsing body
+    if (!web3formsResponse.ok) {
+      console.error("[Fraud Report API] Web3Forms returned error:", {
+        status: web3formsResponse.status,
+        statusText: web3formsResponse.statusText,
+        filesSubmitted: files.length,
+      })
+
+      const errorDetails = handleWeb3FormsError(web3formsResponse.status)
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: errorDetails.userMessage,
+          code: errorDetails.code,
+        },
+        { status: errorDetails.statusCode }
+      )
+    }
+
+    // Parse web3forms response only after confirming 2xx status
     let web3formsResult: any
     try {
-      // Ensure response body hasn't been consumed yet
-      if (!web3formsResponse.bodyUsed) {
+      const contentType = web3formsResponse.headers.get("content-type") || ""
+
+      if (contentType.includes("application/json")) {
         web3formsResult = await web3formsResponse.json()
       } else {
-        throw new Error("Response body was already consumed")
+        const text = await web3formsResponse.text()
+        web3formsResult = text ? JSON.parse(text) : { success: true }
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Unknown error"
@@ -295,27 +317,6 @@ export async function POST(request: NextRequest) {
           code: "RESPONSE_PARSE_ERROR",
         },
         { status: 503 }
-      )
-    }
-
-    // Check for web3forms response errors
-    if (!web3formsResponse.ok) {
-      console.error("[Fraud Report API] Web3Forms returned error:", {
-        status: web3formsResponse.status,
-        statusText: web3formsResponse.statusText,
-        response: web3formsResult,
-        filesSubmitted: files.length,
-      })
-
-      const errorDetails = handleWeb3FormsError(web3formsResponse.status)
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: errorDetails.userMessage,
-          code: errorDetails.code,
-        },
-        { status: errorDetails.statusCode }
       )
     }
 
