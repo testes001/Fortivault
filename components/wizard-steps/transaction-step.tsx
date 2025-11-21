@@ -107,6 +107,15 @@ export function TransactionStep({ data, updateData, showError = false }: Transac
           </p>
         </div>
 
+        {showError && data.transactionHashes.length === 0 && (
+          <Alert variant="destructive" role="alert">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Please add at least one transaction hash to continue
+            </AlertDescription>
+          </Alert>
+        )}
+
         {errors.hash && (
           <Alert variant="destructive" role="alert">
             <AlertCircle className="h-4 w-4" />
