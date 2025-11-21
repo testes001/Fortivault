@@ -168,7 +168,11 @@ export function FraudReportingWizard() {
 
       let result: any
       try {
-        result = await response.json()
+        const text = await response.text()
+        if (!text) {
+          throw new Error("Empty response from server")
+        }
+        result = JSON.parse(text)
       } catch (parseError) {
         throw new Error(`Failed to parse response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`)
       }
