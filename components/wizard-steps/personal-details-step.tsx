@@ -9,6 +9,7 @@ import type { WizardData } from "@/components/fraud-reporting-wizard"
 interface PersonalDetailsStepProps {
   data: WizardData
   updateData: (updates: Partial<WizardData>) => void
+  showError?: boolean
 }
 
 export function PersonalDetailsStep({ data, updateData }: PersonalDetailsStepProps) {
