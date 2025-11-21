@@ -302,34 +302,15 @@ export async function POST(request: NextRequest) {
         filesSubmitted: files.length,
       })
 
-      // Specific error messages based on status
-      let userMessage = "Unable to process your submission. Please try again later."
-      let statusCode = 503
-
-      if (web3formsResponse.status === 400) {
-        userMessage = "Invalid submission data. Please check your information and try again."
-        statusCode = 400
-      } else if (web3formsResponse.status === 401 || web3formsResponse.status === 403) {
-        userMessage = "Server authentication failed. Please contact support."
-        statusCode = 503
-      } else if (web3formsResponse.status === 413) {
-        userMessage = "Files are too large. Please reduce file sizes and try again."
-        statusCode = 413
-      } else if (web3formsResponse.status === 429) {
-        userMessage = "Too many submissions. Please wait a moment and try again."
-        statusCode = 429
-      } else if (web3formsResponse.status >= 500) {
-        userMessage = "The submission service is temporarily unavailable. Please try again in a few moments."
-        statusCode = 503
-      }
+      const errorDetails = handleWeb3FormsError(web3formsResponse.status)
 
       return NextResponse.json(
         {
           success: false,
-          message: userMessage,
-          code: "SUBMISSION_SERVICE_ERROR",
+          message: errorDetails.userMessage,
+          code: errorDetails.code,
         },
-        { status: statusCode }
+        { status: errorDetails.statusCode }
       )
     }
 
