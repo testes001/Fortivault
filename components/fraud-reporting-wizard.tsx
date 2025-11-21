@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 import { ScamTypeStep } from "@/components/wizard-steps/scam-type-step"
 import { PersonalDetailsStep } from "@/components/wizard-steps/personal-details-step"
 import { DetailsStep } from "@/components/wizard-steps/details-step"
@@ -52,24 +54,24 @@ const steps = [
 ]
 
 export function FraudReportingWizard() {
-    const [submissionError, setSubmissionError] = useState("")
-
-    // Client-side validation for required fields
-    const validateForm = () => {
-      if (!data.fullName) return "Full Name is required."
-      if (!data.contactEmail) return "Email is required."
-      if (!data.scamType) return "Scam Type is required."
-      if (!data.amount || !data.currency) return "Amount and currency are required."
-      if (!data.timeline) return "Timeline is required."
-      if (!data.description) return "Description is required."
-      if (data.transactionHashes.length === 0 && data.bankReferences.length === 0) return "At least one transaction hash or bank reference is required."
-      return null
-    }
   const [currentStep, setCurrentStep] = useState(0)
   const [data, setData] = useState<WizardData>(initialData)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submissionError, setSubmissionError] = useState("")
   const [caseId, setCaseId] = useState("")
+
+  const validateForm = () => {
+    if (!data.fullName) return "Full Name is required."
+    if (!data.contactEmail) return "Email is required."
+    if (!data.scamType) return "Scam Type is required."
+    if (!data.amount || !data.currency) return "Amount and currency are required."
+    if (!data.timeline) return "Timeline is required."
+    if (!data.description) return "Description is required."
+    if (data.transactionHashes.length === 0 && data.bankReferences.length === 0)
+      return "At least one transaction hash or bank reference is required."
+    return null
+  }
 
   const updateData = (updates: Partial<WizardData>) => {
     setData((prev) => ({ ...prev, ...updates }))
@@ -88,71 +90,54 @@ export function FraudReportingWizard() {
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-        // Debug: Log access key and form data
-        console.log('Web3Forms Access Key:', process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY)
-        for (let pair of formData.entries()) {
-          console.log(pair[0]+ ': ' + pair[1])
-        }
     e.preventDefault()
     setSubmissionError("")
+
     const validationError = validateForm()
     if (validationError) {
       setSubmissionError(validationError)
-      setIsSubmitting(false)
       return
     }
+
     setIsSubmitting(true)
-  // ...existing code...
-  // Render error message if present
-  // Place this in your JSX where appropriate (e.g., above the form)
-  // {submissionError && <div className="text-red-500 mb-4">{submissionError}</div>}
-
-    const generatedCaseId = `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
-    setCaseId(generatedCaseId)
-
-    const formData = new FormData()
-
-    // Web3Forms access key from environment variable
-    formData.append('access_key', process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY || '')
-
-    // Email settings
-    formData.append('subject', `New Fraud Report Submitted: ${generatedCaseId}`)
-    formData.append('from_name', 'Fortivault Cybercure')
-    formData.append('replyto', data.contactEmail)
-    formData.append('ccemail', `${process.env.NEXT_PUBLIC_PRIMARY_EMAIL}, ${process.env.NEXT_PUBLIC_CC_EMAIL}`)
-
-    // Append form data
-    formData.append('caseId', generatedCaseId)
-    formData.append('fullName', data.fullName)
-    formData.append('scamType', data.scamType)
-    formData.append('amount', `${data.amount} ${data.currency}`)
-    formData.append('timeline', data.timeline)
-    formData.append('description', data.description)
-    formData.append('contactEmail', data.contactEmail)
-    formData.append('contactPhone', data.contactPhone)
-    formData.append('transactionHashes', data.transactionHashes.join('\n'))
-    formData.append('bankReferences', data.bankReferences.join('\n'))
-
-    // Append file attachments
-    data.evidenceFiles.forEach(file => {
-      formData.append('attachment[]', file)
-    })
 
     try {
-      const response = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        body: formData,
+      const response = await fetch("/api/report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: data.fullName,
+          contactEmail: data.contactEmail,
+          contactPhone: data.contactPhone,
+          scamType: data.scamType,
+          amount: data.amount,
+          currency: data.currency,
+          timeline: data.timeline,
+          description: data.description,
+          transactionHashes: data.transactionHashes,
+          bankReferences: data.bankReferences,
+          fileCount: data.evidenceFiles.length,
+          fileNames: data.evidenceFiles.map((f) => f.name),
+        }),
       })
+
       const result = await response.json()
-      console.log('Web3Forms API Response:', result)
-      if (result.success) {
+
+      if (result.success && result.caseId) {
+        setCaseId(result.caseId)
         setIsSubmitted(true)
       } else {
-        setSubmissionError(result.message || "Submission failed. Please try again later.")
+        const errorMessage =
+          Array.isArray(result.errors) && result.errors.length > 0
+            ? result.errors[0]
+            : result.error || "Submission failed. Please try again later."
+        setSubmissionError(errorMessage)
         setIsSubmitting(false)
       }
     } catch (error) {
-      console.error('Web3Forms Fetch Error:', error)
+      console.error("Submission error:", error)
       setSubmissionError("Network error. Please check your connection and try again.")
       setIsSubmitting(false)
     }
@@ -185,7 +170,6 @@ export function FraudReportingWizard() {
 
   return (
     <form onSubmit={handleSubmit}>
-
       <Card className="w-full">
         <CardHeader>
           <div className="space-y-4">
@@ -201,6 +185,13 @@ export function FraudReportingWizard() {
         </CardHeader>
 
         <CardContent className="space-y-6">
+          {submissionError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{submissionError}</AlertDescription>
+            </Alert>
+          )}
+
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
