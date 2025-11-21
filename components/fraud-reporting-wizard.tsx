@@ -165,6 +165,15 @@ export function FraudReportingWizard() {
         body: formData,
       })
 
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status} ${response.statusText}`)
+      }
+
+      const contentType = response.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned invalid response format")
+      }
+
       const result = await response.json()
 
       if (result.success) {
@@ -172,7 +181,7 @@ export function FraudReportingWizard() {
         setIsSubmitted(true)
       } else {
         const errorMessage =
-          result.message || "Submission failed. Please check your information and try again."
+          result.message || result.errors?.[0] || "Submission failed. Please check your information and try again."
         setSubmissionError(errorMessage)
         setIsSubmitting(false)
       }
