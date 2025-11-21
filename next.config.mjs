@@ -1,4 +1,4 @@
-import { validateStartup } from "./lib/config/startup-check.js"
+import { validateStartup } from "./lib/config/startup-check.mjs"
 
 // Run startup validation before Next.js initializes
 const validationResult = validateStartup()
