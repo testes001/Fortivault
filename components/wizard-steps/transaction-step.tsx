@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, X } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 import type { WizardData } from "@/components/fraud-reporting-wizard"
 
 interface TransactionStepProps {
@@ -13,38 +15,83 @@ interface TransactionStepProps {
   updateData: (updates: Partial<WizardData>) => void
 }
 
+const isValidTransactionHash = (hash: string): boolean => {
+  const cleaned = hash.trim()
+  return /^[a-fA-F0-9]{64}$/.test(cleaned)
+}
+
+const isValidBankReference = (reference: string): boolean => {
+  const cleaned = reference.trim()
+  return cleaned.length >= 5 && /^[a-zA-Z0-9\-\/\s]+$/.test(cleaned)
+}
+
 export function TransactionStep({ data, updateData }: TransactionStepProps) {
   const [newHash, setNewHash] = useState("")
   const [newReference, setNewReference] = useState("")
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const addTransactionHash = () => {
-    if (newHash.trim()) {
-      updateData({
-        transactionHashes: [...data.transactionHashes, newHash.trim()],
-      })
-      setNewHash("")
+    const cleaned = newHash.trim()
+
+    if (!cleaned) {
+      setErrors({ hash: "Transaction hash cannot be empty" })
+      return
     }
+
+    if (!isValidTransactionHash(cleaned)) {
+      setErrors({ hash: "Invalid hash format. Expected 64 hexadecimal characters" })
+      return
+    }
+
+    if (data.transactionHashes.includes(cleaned)) {
+      setErrors({ hash: "This transaction hash has already been added" })
+      return
+    }
+
+    updateData({
+      transactionHashes: [...data.transactionHashes, cleaned],
+    })
+    setNewHash("")
+    setErrors({})
   }
 
   const removeTransactionHash = (index: number) => {
     updateData({
       transactionHashes: data.transactionHashes.filter((_, i) => i !== index),
     })
+    setErrors({})
   }
 
   const addBankReference = () => {
-    if (newReference.trim()) {
-      updateData({
-        bankReferences: [...data.bankReferences, newReference.trim()],
-      })
-      setNewReference("")
+    const cleaned = newReference.trim()
+
+    if (!cleaned) {
+      setErrors({ reference: "Bank reference cannot be empty" })
+      return
     }
+
+    if (!isValidBankReference(cleaned)) {
+      setErrors({ reference: "Invalid format. Use letters, numbers, hyphens, and spaces (minimum 5 characters)" })
+      return
+    }
+
+    if (data.bankReferences.includes(cleaned)) {
+      setErrors({ reference: "This bank reference has already been added" })
+      return
+    }
+
+    updateData({
+      bankReferences: [...data.bankReferences, cleaned],
+    })
+    setNewReference("")
+    setErrors({})
   }
 
   const removeBankReference = (index: number) => {
     updateData({
       bankReferences: data.bankReferences.filter((_, i) => i !== index),
     })
+    setErrors({})
   }
 
   if (data.scamType === "crypto") {
@@ -52,22 +99,32 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
       <div className="space-y-6">
         <div>
           <h3 className="text-lg font-semibold mb-4" id="crypto-heading">
-            Cryptocurrency Transaction Information
+            Cryptocurrency Transaction Information <span className="text-gray-400 text-sm">(Optional)</span>
           </h3>
           <p className="text-muted-foreground mb-4">
-            Please provide any transaction hashes (TXIDs) related to the fraudulent transfers.
+            If available, provide any transaction hashes (TXIDs) related to the fraudulent transfers.
           </p>
         </div>
+
+        {errors.hash && (
+          <Alert variant="destructive" role="alert">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{errors.hash}</AlertDescription>
+          </Alert>
+        )}
 
         <div className="space-y-4">
           <div className="flex gap-2">
             <Input
               placeholder="Enter transaction hash (TXID)"
               value={newHash}
-              onChange={(e) => setNewHash(e.target.value)}
+              onChange={(e) => {
+                setNewHash(e.target.value)
+                if (errors.hash) setErrors({})
+              }}
               onKeyPress={(e) => e.key === "Enter" && addTransactionHash()}
               aria-labelledby="crypto-heading"
-              aria-describedby="crypto-hint"
+              aria-describedby={errors.hash ? "crypto-error" : "crypto-hint"}
               className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
             />
             <Button
@@ -79,9 +136,15 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
               <Plus className="w-4 h-4" aria-hidden="true" />
             </Button>
           </div>
-          <p id="crypto-hint" className="text-xs text-muted-foreground">
-            Press Enter or click Add to include a transaction hash
-          </p>
+          {errors.hash ? (
+            <p id="crypto-error" className="text-xs text-red-500" role="alert">
+              {errors.hash}
+            </p>
+          ) : (
+            <p id="crypto-hint" className="text-xs text-muted-foreground">
+              Press Enter or click Add to include a transaction hash (64 hex characters)
+            </p>
+          )}
 
           {data.transactionHashes.length > 0 && (
             <div className="space-y-2">
@@ -119,22 +182,32 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-4" id="bank-heading">
-          Bank Transfer Information
+          Bank Transfer Information <span className="text-gray-400 text-sm">(Optional)</span>
         </h3>
         <p className="text-muted-foreground mb-4">
-          Please provide any bank transfer references, wire transfer numbers, or payment confirmation numbers.
+          If available, provide any bank transfer references, wire transfer numbers, or payment confirmation numbers.
         </p>
       </div>
+
+      {errors.reference && (
+        <Alert variant="destructive" role="alert">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errors.reference}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="space-y-4">
         <div className="flex gap-2">
           <Input
             placeholder="Enter reference number"
             value={newReference}
-            onChange={(e) => setNewReference(e.target.value)}
+            onChange={(e) => {
+              setNewReference(e.target.value)
+              if (errors.reference) setErrors({})
+            }}
             onKeyPress={(e) => e.key === "Enter" && addBankReference()}
             aria-labelledby="bank-heading"
-            aria-describedby="bank-hint"
+            aria-describedby={errors.reference ? "bank-error" : "bank-hint"}
             className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
           />
           <Button
@@ -146,9 +219,15 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
             <Plus className="w-4 h-4" aria-hidden="true" />
           </Button>
         </div>
-        <p id="bank-hint" className="text-xs text-muted-foreground">
-          Press Enter or click Add to include a reference number
-        </p>
+        {errors.reference ? (
+          <p id="bank-error" className="text-xs text-red-500" role="alert">
+            {errors.reference}
+          </p>
+        ) : (
+          <p id="bank-hint" className="text-xs text-muted-foreground">
+            Press Enter or click Add to include a reference number
+          </p>
+        )}
 
         {data.bankReferences.length > 0 && (
           <div className="space-y-2">

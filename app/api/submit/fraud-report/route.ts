@@ -3,31 +3,19 @@ import { validateFraudReport } from "@/lib/utils/validation"
 import { rateLimiter } from "@/lib/security/rate-limiter"
 
 const RATE_LIMIT_CONFIG = {
-  windowMs: 60 * 60 * 1000, // 1 hour
+  windowMs: 60 * 60 * 1000,
   maxRequests: 5,
 }
 
 const WEB3FORMS_API_KEY = process.env.WEB3FORMS_API_KEY
 const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit"
 
-interface FormDataFields {
-  fullName?: string
-  contactEmail?: string
-  contactPhone?: string
-  scamType?: string
-  amount?: string
-  currency?: string
-  timeline?: string
-  description?: string
-  transactionHashes?: string
-  bankReferences?: string
-}
-
 export const runtime = "nodejs"
 
 export async function POST(request: NextRequest) {
+  const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
+
   try {
-    // Validate API key is configured
     if (!WEB3FORMS_API_KEY) {
       console.error("[Fraud Report API] Missing WEB3FORMS_API_KEY environment variable")
       return NextResponse.json(
@@ -36,9 +24,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
-
-    // Apply rate limiting
     if (!rateLimiter.isAllowed(clientIp, RATE_LIMIT_CONFIG)) {
       return NextResponse.json(
         { success: false, message: "Too many requests. Please try again later." },
@@ -47,57 +32,46 @@ export async function POST(request: NextRequest) {
     }
 
     const contentType = request.headers.get("content-type") || ""
-    let fullName = ""
-    let contactEmail = ""
-    let contactPhone = ""
-    let scamType = ""
-    let amount = ""
-    let currency = ""
-    let timeline = ""
-    let description = ""
-    let transactionHashes: string[] = []
-    let bankReferences: string[] = []
-    const uploadedFiles: { name: string; size: number }[] = []
 
-    // Handle multipart/form-data
-    if (contentType.includes("multipart/form-data")) {
-      const formData = await request.formData()
-
-      fullName = (formData.get("fullName") as string) || ""
-      contactEmail = (formData.get("contactEmail") as string) || ""
-      contactPhone = (formData.get("contactPhone") as string) || ""
-      scamType = (formData.get("scamType") as string) || ""
-      amount = (formData.get("amount") as string) || ""
-      currency = (formData.get("currency") as string) || ""
-      timeline = (formData.get("timeline") as string) || ""
-      description = (formData.get("description") as string) || ""
-
-      const txHashesStr = (formData.get("transactionHashes") as string) || ""
-      const bankRefsStr = (formData.get("bankReferences") as string) || ""
-
-      try {
-        transactionHashes = txHashesStr ? JSON.parse(txHashesStr) : []
-        bankReferences = bankRefsStr ? JSON.parse(bankRefsStr) : []
-      } catch {
-        transactionHashes = []
-        bankReferences = []
-      }
-
-      // Process file uploads
-      const files = formData.getAll("files")
-      for (const file of files) {
-        if (file instanceof File) {
-          uploadedFiles.push({ name: file.name, size: file.size })
-        }
-      }
-    } else {
+    if (!contentType.includes("application/json")) {
       return NextResponse.json(
-        { success: false, message: "Invalid content type. Expected multipart/form-data." },
+        { success: false, message: "Invalid content type. Expected application/json." },
         { status: 400 }
       )
     }
 
-    // Validate required fields server-side
+    let body: any
+    try {
+      body = await request.json()
+    } catch (error) {
+      console.error("[Fraud Report API] Error parsing JSON:", error)
+      return NextResponse.json(
+        { success: false, message: "Invalid JSON payload." },
+        { status: 400 }
+      )
+    }
+
+    const fullName = body.fullName || ""
+    const contactEmail = body.contactEmail || ""
+    const contactPhone = body.contactPhone || ""
+    const scamType = body.scamType || ""
+    const amount = body.amount || ""
+    const currency = body.currency || ""
+    const timeline = body.timeline || ""
+    const description = body.description || ""
+    const transactionHashes = Array.isArray(body.transactionHashes) ? body.transactionHashes : []
+    const bankReferences = Array.isArray(body.bankReferences) ? body.bankReferences : []
+    const filesCount = body.filesCount || 0
+
+    console.log("[Fraud Report API] Received submission:", {
+      fullName,
+      contactEmail,
+      scamType,
+      amount,
+      currency,
+      filesCount,
+    })
+
     const validation = validateFraudReport({
       fullName,
       contactEmail,
@@ -111,13 +85,13 @@ export async function POST(request: NextRequest) {
     })
 
     if (!validation.valid) {
+      console.error("[Fraud Report API] Validation failed:", validation.errors)
       return NextResponse.json(
-        { success: false, errors: validation.errors },
+        { success: false, errors: validation.errors, message: validation.errors[0] },
         { status: 400 }
       )
     }
 
-    // Create Web3Forms submission
     const web3formsData = new FormData()
     web3formsData.append("access_key", WEB3FORMS_API_KEY)
     web3formsData.append("form_name", "fraud-report")
@@ -131,19 +105,43 @@ export async function POST(request: NextRequest) {
     web3formsData.append("description", description)
     web3formsData.append("transactionHashes", JSON.stringify(transactionHashes))
     web3formsData.append("bankReferences", JSON.stringify(bankReferences))
-    web3formsData.append("filesCount", uploadedFiles.length.toString())
-    web3formsData.append("fileNames", uploadedFiles.map((f) => f.name).join(", "))
+    web3formsData.append("filesCount", filesCount.toString())
     web3formsData.append("clientIp", clientIp)
     web3formsData.append("userAgent", request.headers.get("user-agent") || "unknown")
     web3formsData.append("submittedAt", new Date().toISOString())
 
-    // Submit to Web3Forms
-    const web3formsResponse = await fetch(WEB3FORMS_ENDPOINT, {
-      method: "POST",
-      body: web3formsData,
-    })
+    let web3formsResponse: Response
+    try {
+      web3formsResponse = await fetch(WEB3FORMS_ENDPOINT, {
+        method: "POST",
+        body: web3formsData,
+      })
+    } catch (error) {
+      console.error("[Fraud Report API] Error contacting Web3Forms:", error)
+      return NextResponse.json(
+        { success: false, message: "Unable to submit form. Please try again later." },
+        { status: 500 }
+      )
+    }
 
-    const web3formsResult = await web3formsResponse.json()
+    if (!web3formsResponse.ok) {
+      console.error(`[Fraud Report API] Web3Forms returned ${web3formsResponse.status}`)
+      return NextResponse.json(
+        { success: false, message: "Submission service unavailable. Please try again later." },
+        { status: 500 }
+      )
+    }
+
+    let web3formsResult: any
+    try {
+      web3formsResult = await web3formsResponse.json()
+    } catch (error) {
+      console.error("[Fraud Report API] Error parsing Web3Forms response:", error)
+      return NextResponse.json(
+        { success: false, message: "Invalid response from submission service." },
+        { status: 500 }
+      )
+    }
 
     if (!web3formsResult.success) {
       console.error("[Fraud Report API] Web3Forms submission failed:", web3formsResult)
@@ -153,9 +151,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate local case ID for user reference
     const caseId = `CSRU-${Date.now().toString(36).toUpperCase()}`
-
     console.log(`[Fraud Report API] Successful submission - Case: ${caseId}, Email: ${contactEmail}`)
 
     return NextResponse.json(
@@ -163,15 +159,15 @@ export async function POST(request: NextRequest) {
         success: true,
         caseId,
         message: "Fraud report received successfully. We will review your case shortly.",
-        filesProcessed: uploadedFiles.length,
+        filesProcessed: filesCount,
       },
       { status: 201 }
     )
   } catch (error) {
-    console.error("[Fraud Report API] Error:", error)
+    console.error("[Fraud Report API] Unexpected error:", error)
     const errorMsg = error instanceof Error ? error.message : "Unknown error"
     return NextResponse.json(
-      { success: false, message: "Internal server error. Please try again later." },
+      { success: false, message: `Internal server error: ${errorMsg}` },
       { status: 500 }
     )
   }

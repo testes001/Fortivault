@@ -38,11 +38,35 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
 
   const handleAmountChange = (value: string) => {
     const num = parseFloat(value)
-    if (value === "" || (num >= 0 && !isNaN(num))) {
+
+    if (value === "") {
       updateData({ amount: value })
-      if (errors.amount) {
-        setErrors({ ...errors, amount: "" })
-      }
+      setErrors({ ...errors, amount: "" })
+    } else if (isNaN(num) || num <= 0) {
+      setErrors({ ...errors, amount: "Amount must be greater than 0" })
+    } else {
+      updateData({ amount: value })
+      setErrors({ ...errors, amount: "" })
+    }
+  }
+
+  const handleAmountBlur = (value: string) => {
+    if (value && (isNaN(parseFloat(value)) || parseFloat(value) <= 0)) {
+      setErrors({ ...errors, amount: "Amount must be greater than 0" })
+    }
+  }
+
+  const handleCurrencyChange = (value: string) => {
+    updateData({ currency: value })
+    if (errors.currency) {
+      setErrors({ ...errors, currency: "" })
+    }
+  }
+
+  const handleTimelineChange = (value: string) => {
+    updateData({ timeline: value })
+    if (errors.timeline) {
+      setErrors({ ...errors, timeline: "" })
     }
   }
 
@@ -50,6 +74,12 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
     updateData({ description: value })
     if (errors.description && value.trim().length > 0) {
       setErrors({ ...errors, description: "" })
+    }
+  }
+
+  const handleDescriptionBlur = (value: string) => {
+    if (!value.trim()) {
+      setErrors({ ...errors, description: "Description is required" })
     }
   }
 
@@ -65,10 +95,11 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
             type="number"
             inputMode="decimal"
             placeholder="0.00"
-            min="0"
+            min="0.01"
             step="0.01"
             value={data.amount}
             onChange={(e) => handleAmountChange(e.target.value)}
+            onBlur={(e) => handleAmountBlur(e.target.value)}
             aria-labelledby="amount"
             aria-describedby={errors.amount ? "amount-error" : "amount-hint"}
             aria-required="true"
@@ -81,7 +112,7 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
           )}
           {!errors.amount && (
             <p id="amount-hint" className="text-xs text-muted-foreground">
-              Enter the amount in numbers only
+              Enter the amount greater than 0
             </p>
           )}
         </div>
@@ -90,10 +121,11 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
           <Label htmlFor="currency" className="font-medium">
             Currency <span className="text-red-500" aria-label="required">*</span>
           </Label>
-          <Select value={data.currency} onValueChange={(value) => updateData({ currency: value })}>
+          <Select value={data.currency} onValueChange={handleCurrencyChange}>
             <SelectTrigger
               id="currency"
               aria-labelledby="currency"
+              aria-describedby={errors.currency ? "currency-error" : undefined}
               aria-required="true"
               className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
             >
@@ -107,6 +139,11 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
               ))}
             </SelectContent>
           </Select>
+          {errors.currency && (
+            <p id="currency-error" className="text-sm text-red-500" role="alert">
+              {errors.currency}
+            </p>
+          )}
         </div>
       </div>
 
@@ -114,10 +151,11 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
         <Label htmlFor="timeline" className="font-medium">
           When did this occur? <span className="text-red-500" aria-label="required">*</span>
         </Label>
-        <Select value={data.timeline} onValueChange={(value) => updateData({ timeline: value })}>
+        <Select value={data.timeline} onValueChange={handleTimelineChange}>
           <SelectTrigger
             id="timeline"
             aria-labelledby="timeline"
+            aria-describedby={errors.timeline ? "timeline-error" : undefined}
             aria-required="true"
             className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
           >
@@ -131,6 +169,11 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
             ))}
           </SelectContent>
         </Select>
+        {errors.timeline && (
+          <p id="timeline-error" className="text-sm text-red-500" role="alert">
+            {errors.timeline}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -143,6 +186,7 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
           className="min-h-[120px] focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
           value={data.description}
           onChange={(e) => handleDescriptionChange(e.target.value)}
+          onBlur={(e) => handleDescriptionBlur(e.target.value)}
           aria-labelledby="description"
           aria-describedby={errors.description ? "description-error" : "description-hint"}
           aria-required="true"

@@ -89,8 +89,6 @@ export function FraudReportingWizard() {
     if (!data.amount || !data.currency) return "Amount and currency are required."
     if (!data.timeline) return "Timeline is required."
     if (!data.description) return "Description is required."
-    if (data.transactionHashes.length === 0 && data.bankReferences.length === 0)
-      return "At least one transaction hash or bank reference is required."
     return null
   }
 
@@ -106,6 +104,7 @@ export function FraudReportingWizard() {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
       setShowStepError(false)
+      setSubmissionError("")
     }
   }
 
@@ -113,6 +112,7 @@ export function FraudReportingWizard() {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
       setShowStepError(false)
+      setSubmissionError("")
     }
   }
 
@@ -138,48 +138,62 @@ export function FraudReportingWizard() {
     setIsSubmitting(true)
 
     try {
-      // Create FormData to handle file uploads
-      const formData = new FormData()
+      // Create JSON payload (files will be tracked but not sent in initial request)
+      const fileMetadata = data.evidenceFiles.map((file) => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      }))
 
-      // Add form fields
-      formData.append("fullName", data.fullName)
-      formData.append("contactEmail", data.contactEmail)
-      formData.append("contactPhone", data.contactPhone)
-      formData.append("scamType", data.scamType)
-      formData.append("amount", data.amount)
-      formData.append("currency", data.currency)
-      formData.append("timeline", data.timeline)
-      formData.append("description", data.description)
-
-      // Add arrays as JSON strings
-      formData.append("transactionHashes", JSON.stringify(data.transactionHashes))
-      formData.append("bankReferences", JSON.stringify(data.bankReferences))
-
-      // Add file attachments
-      data.evidenceFiles.forEach((file) => {
-        formData.append("files", file)
-      })
+      const payload = {
+        fullName: data.fullName,
+        contactEmail: data.contactEmail,
+        contactPhone: data.contactPhone,
+        scamType: data.scamType,
+        amount: data.amount,
+        currency: data.currency,
+        timeline: data.timeline,
+        description: data.description,
+        transactionHashes: data.transactionHashes,
+        bankReferences: data.bankReferences,
+        filesMetadata: fileMetadata,
+        filesCount: data.evidenceFiles.length,
+      }
 
       const response = await fetch("/api/submit/fraud-report", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       })
 
       const result = await response.json()
+
+      if (!response.ok) {
+        const errorMessage =
+          result.message || result.errors?.[0] || `Server error: ${response.status}`
+        throw new Error(errorMessage)
+      }
 
       if (result.success) {
         setCaseId(result.caseId)
         setIsSubmitted(true)
       } else {
         const errorMessage =
-          result.message || "Submission failed. Please check your information and try again."
+          result.message || result.errors?.[0] || "Submission failed. Please check your information and try again."
         setSubmissionError(errorMessage)
         setIsSubmitting(false)
       }
     } catch (error) {
       console.error("Submission error:", error)
-      const errorMsg = error instanceof Error ? error.message : "Network error"
-      setSubmissionError(`${errorMsg}. Please check your connection and try again.`)
+      let errorMsg = "Network error"
+
+      if (error instanceof Error) {
+        errorMsg = error.message
+      }
+
+      setSubmissionError(`Submission failed: ${errorMsg}`)
       setIsSubmitting(false)
     }
   }
@@ -193,7 +207,7 @@ export function FraudReportingWizard() {
       case 2:
         return data.amount && data.currency && data.timeline && data.description
       case 3:
-        return data.transactionHashes.length > 0 || data.bankReferences.length > 0
+        return true
       case 4:
         return true
       case 5:
@@ -226,7 +240,7 @@ export function FraudReportingWizard() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {submissionError && (
+          {submissionError && currentStep === steps.length - 1 && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <div className="flex items-center justify-between gap-4 w-full">

@@ -70,31 +70,35 @@ export function EvidenceStep({ data, updateData }: EvidenceStepProps) {
         errors.push(
           `Total file size (${getFileSizeDisplay(totalSize)}) exceeds maximum of ${MAX_TOTAL_SIZE_MB}MB`,
         )
-      } else if (validFiles.length > 0) {
-        setUploadInProgress(true)
-        // Simulate file upload processing
-        setTimeout(() => {
-          const updatedFiles = [...data.evidenceFiles, ...validFiles]
-          updateData({ evidenceFiles: updatedFiles })
-          setUploadInProgress(false)
-          // Clear errors after successful upload
-          setFileErrors([])
-        }, 500)
       }
 
       if (errors.length > 0) {
         setFileErrors(errors)
+        return
+      }
+
+      if (validFiles.length > 0) {
+        setUploadInProgress(true)
+        setTimeout(() => {
+          const updatedFiles = [...data.evidenceFiles, ...validFiles]
+          updateData({ evidenceFiles: updatedFiles })
+          setUploadInProgress(false)
+          setFileErrors([])
+        }, 500)
       }
     },
     [data.evidenceFiles, updateData],
   )
 
   const removeFile = (indexToRemove: number) => {
+    const newFiles = data.evidenceFiles.filter((_, index) => index !== indexToRemove)
     updateData({
-      evidenceFiles: data.evidenceFiles.filter((_, index) => index !== indexToRemove),
+      evidenceFiles: newFiles,
     })
-    // Clear errors when removing files
-    setFileErrors([])
+
+    if (newFiles.length === 0) {
+      setFileErrors([])
+    }
   }
 
   const totalSize = getTotalFileSize()

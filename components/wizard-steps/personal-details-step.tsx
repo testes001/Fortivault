@@ -26,15 +26,33 @@ export function PersonalDetailsStep({ data, updateData, showError = false }: Per
 
   const handleEmailChange = (value: string) => {
     updateData({ contactEmail: value })
-    if (errors.contactEmail && validateEmail(value)) {
+
+    if (value && !validateEmail(value)) {
+      setErrors({ ...errors, contactEmail: "Please enter a valid email address" })
+    } else {
       setErrors({ ...errors, contactEmail: "" })
+    }
+  }
+
+  const handleEmailBlur = (value: string) => {
+    if (value && !validateEmail(value)) {
+      setErrors({ ...errors, contactEmail: "Please enter a valid email address" })
     }
   }
 
   const handlePhoneChange = (value: string) => {
     updateData({ contactPhone: value })
-    if (errors.contactPhone && (value.trim().length === 0 || validatePhone(value))) {
+
+    if (value.trim().length > 0 && !validatePhone(value)) {
+      setErrors({ ...errors, contactPhone: "Invalid phone format. Must be at least 10 digits" })
+    } else {
       setErrors({ ...errors, contactPhone: "" })
+    }
+  }
+
+  const handlePhoneBlur = (value: string) => {
+    if (value.trim().length > 0 && !validatePhone(value)) {
+      setErrors({ ...errors, contactPhone: "Invalid phone format. Must be at least 10 digits" })
     }
   }
 
@@ -89,6 +107,7 @@ export function PersonalDetailsStep({ data, updateData, showError = false }: Per
             placeholder="you@example.com"
             value={data.contactEmail}
             onChange={(e) => handleEmailChange(e.target.value)}
+            onBlur={(e) => handleEmailBlur(e.target.value)}
             aria-labelledby="contactEmail"
             aria-describedby={errors.contactEmail ? "contactEmail-error" : "contactEmail-hint"}
             aria-required="true"
@@ -116,6 +135,7 @@ export function PersonalDetailsStep({ data, updateData, showError = false }: Per
             placeholder="+1 (555) 123-4567"
             value={data.contactPhone}
             onChange={(e) => handlePhoneChange(e.target.value)}
+            onBlur={(e) => handlePhoneBlur(e.target.value)}
             aria-labelledby="contactPhone"
             aria-describedby={errors.contactPhone ? "contactPhone-error" : "contactPhone-hint"}
             className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
