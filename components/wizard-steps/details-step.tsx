@@ -95,10 +95,11 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
             type="number"
             inputMode="decimal"
             placeholder="0.00"
-            min="0"
+            min="0.01"
             step="0.01"
             value={data.amount}
             onChange={(e) => handleAmountChange(e.target.value)}
+            onBlur={(e) => handleAmountBlur(e.target.value)}
             aria-labelledby="amount"
             aria-describedby={errors.amount ? "amount-error" : "amount-hint"}
             aria-required="true"
@@ -111,7 +112,7 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
           )}
           {!errors.amount && (
             <p id="amount-hint" className="text-xs text-muted-foreground">
-              Enter the amount in numbers only
+              Enter the amount greater than 0
             </p>
           )}
         </div>
