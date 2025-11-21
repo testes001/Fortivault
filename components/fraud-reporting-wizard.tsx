@@ -89,6 +89,9 @@ export function FraudReportingWizard() {
     if (!data.amount || !data.currency) return "Amount and currency are required."
     if (!data.timeline) return "Timeline is required."
     if (!data.description) return "Description is required."
+    if (data.transactionHashes.length === 0 && data.bankReferences.length === 0) {
+      return "At least one transaction hash or bank reference is required."
+    }
     return null
   }
 
@@ -205,7 +208,7 @@ export function FraudReportingWizard() {
       case 2:
         return data.amount && data.currency && data.timeline && data.description
       case 3:
-        return true
+        return data.transactionHashes.length > 0 || data.bankReferences.length > 0
       case 4:
         return true
       case 5:
@@ -267,7 +270,7 @@ export function FraudReportingWizard() {
               {currentStep === 0 && <ScamTypeStep data={data} updateData={updateData} showError={showStepError} />}
               {currentStep === 1 && <PersonalDetailsStep data={data} updateData={updateData} showError={showStepError} />}
               {currentStep === 2 && <DetailsStep data={data} updateData={updateData} showError={showStepError} />}
-              {currentStep === 3 && <TransactionStep data={data} updateData={updateData} />}
+              {currentStep === 3 && <TransactionStep data={data} updateData={updateData} showError={showStepError} />}
               {currentStep === 4 && <EvidenceStep data={data} updateData={updateData} />}
               {currentStep === 5 && <ConfirmationStep data={data} updateData={updateData} />}
             </motion.div>

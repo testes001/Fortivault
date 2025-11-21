@@ -13,6 +13,7 @@ import type { WizardData } from "@/components/fraud-reporting-wizard"
 interface TransactionStepProps {
   data: WizardData
   updateData: (updates: Partial<WizardData>) => void
+  showError?: boolean
 }
 
 const isValidTransactionHash = (hash: string): boolean => {
@@ -25,7 +26,7 @@ const isValidBankReference = (reference: string): boolean => {
   return cleaned.length >= 5 && /^[a-zA-Z0-9\-\/\s]+$/.test(cleaned)
 }
 
-export function TransactionStep({ data, updateData }: TransactionStepProps) {
+export function TransactionStep({ data, updateData, showError = false }: TransactionStepProps) {
   const [newHash, setNewHash] = useState("")
   const [newReference, setNewReference] = useState("")
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -99,12 +100,21 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
       <div className="space-y-6">
         <div>
           <h3 className="text-lg font-semibold mb-4" id="crypto-heading">
-            Cryptocurrency Transaction Information <span className="text-gray-400 text-sm">(Optional)</span>
+            Cryptocurrency Transaction Information <span className="text-red-500" aria-label="required">*</span>
           </h3>
           <p className="text-muted-foreground mb-4">
-            If available, provide any transaction hashes (TXIDs) related to the fraudulent transfers.
+            Provide at least one transaction hash (TXID) related to the fraudulent transfers.
           </p>
         </div>
+
+        {showError && data.transactionHashes.length === 0 && (
+          <Alert variant="destructive" role="alert">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Please add at least one transaction hash to continue
+            </AlertDescription>
+          </Alert>
+        )}
 
         {errors.hash && (
           <Alert variant="destructive" role="alert">
@@ -182,12 +192,21 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-4" id="bank-heading">
-          Bank Transfer Information <span className="text-gray-400 text-sm">(Optional)</span>
+          Bank Transfer Information <span className="text-red-500" aria-label="required">*</span>
         </h3>
         <p className="text-muted-foreground mb-4">
-          If available, provide any bank transfer references, wire transfer numbers, or payment confirmation numbers.
+          Provide at least one bank transfer reference, wire transfer number, or payment confirmation number.
         </p>
       </div>
+
+      {showError && data.bankReferences.length === 0 && (
+        <Alert variant="destructive" role="alert">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Please add at least one bank reference to continue
+          </AlertDescription>
+        </Alert>
+      )}
 
       {errors.reference && (
         <Alert variant="destructive" role="alert">
