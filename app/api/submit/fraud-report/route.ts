@@ -12,44 +12,18 @@ const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit"
 
 export const runtime = "nodejs"
 
-export async function POST(request: NextRequest) {
-  const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
+async function extractFormData(request: NextRequest) {
+  const contentType = request.headers.get("content-type") || ""
+
+  if (!contentType.includes("multipart/form-data")) {
+    return {
+      error: "Invalid content type. Expected multipart/form-data.",
+      data: null,
+    }
+  }
 
   try {
-    if (!WEB3FORMS_API_KEY) {
-      console.error("[Fraud Report API] Missing WEB3FORMS_API_KEY environment variable")
-      return NextResponse.json(
-        { success: false, message: "Server configuration error. Please try again later." },
-        { status: 500 }
-      )
-    }
-
-    if (!rateLimiter.isAllowed(clientIp, RATE_LIMIT_CONFIG)) {
-      return NextResponse.json(
-        { success: false, message: "Too many requests. Please try again later." },
-        { status: 429 }
-      )
-    }
-
-    const contentType = request.headers.get("content-type") || ""
-
-    if (!contentType.includes("multipart/form-data")) {
-      return NextResponse.json(
-        { success: false, message: "Invalid content type. Expected multipart/form-data." },
-        { status: 400 }
-      )
-    }
-
-    let formData: FormData
-    try {
-      formData = await request.formData()
-    } catch (error) {
-      console.error("[Fraud Report API] Error reading form data:", error)
-      return NextResponse.json(
-        { success: false, message: "Failed to process form data. Please try again." },
-        { status: 400 }
-      )
-    }
+    const formData = await request.formData()
 
     const fullName = (formData.get("fullName") as string) || ""
     const contactEmail = (formData.get("contactEmail") as string) || ""
@@ -59,17 +33,6 @@ export async function POST(request: NextRequest) {
     const currency = (formData.get("currency") as string) || ""
     const timeline = (formData.get("timeline") as string) || ""
     const description = (formData.get("description") as string) || ""
-
-    console.log("[Fraud Report API] Received form data:", {
-      fullName,
-      contactEmail,
-      contactPhone,
-      scamType,
-      amount,
-      currency,
-      timeline,
-      description: description.substring(0, 50) + "...",
-    })
 
     let transactionHashes: string[] = []
     let bankReferences: string[] = []
@@ -91,6 +54,81 @@ export async function POST(request: NextRequest) {
         uploadedFiles.push({ name: file.name, size: file.size })
       }
     }
+
+    return {
+      error: null,
+      data: {
+        fullName,
+        contactEmail,
+        contactPhone,
+        scamType,
+        amount,
+        currency,
+        timeline,
+        description,
+        transactionHashes,
+        bankReferences,
+        uploadedFiles,
+      },
+    }
+  } catch (error) {
+    console.error("[Fraud Report API] Error reading form data:", error)
+    return {
+      error: "Failed to process form data. Please try again.",
+      data: null,
+    }
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
+
+  try {
+    if (!WEB3FORMS_API_KEY) {
+      console.error("[Fraud Report API] Missing WEB3FORMS_API_KEY environment variable")
+      return NextResponse.json(
+        { success: false, message: "Server configuration error. Please try again later." },
+        { status: 500 }
+      )
+    }
+
+    if (!rateLimiter.isAllowed(clientIp, RATE_LIMIT_CONFIG)) {
+      return NextResponse.json(
+        { success: false, message: "Too many requests. Please try again later." },
+        { status: 429 }
+      )
+    }
+
+    const { error: extractError, data } = await extractFormData(request)
+
+    if (extractError || !data) {
+      return NextResponse.json(
+        { success: false, message: extractError || "Invalid request data" },
+        { status: 400 }
+      )
+    }
+
+    const {
+      fullName,
+      contactEmail,
+      contactPhone,
+      scamType,
+      amount,
+      currency,
+      timeline,
+      description,
+      transactionHashes,
+      bankReferences,
+      uploadedFiles,
+    } = data
+
+    console.log("[Fraud Report API] Received submission:", {
+      fullName,
+      contactEmail,
+      scamType,
+      amount,
+      currency,
+    })
 
     const validation = validateFraudReport({
       fullName,
