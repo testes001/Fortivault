@@ -116,17 +116,89 @@ export async function POST(request: NextRequest) {
     web3formsData.append("submittedAt", new Date().toISOString())
 
     // Submit to Web3Forms
-    const web3formsResponse = await fetch(WEB3FORMS_ENDPOINT, {
-      method: "POST",
-      body: web3formsData,
-    })
+    let web3formsResponse: Response
+    try {
+      web3formsResponse = await fetch(WEB3FORMS_ENDPOINT, {
+        method: "POST",
+        body: web3formsData,
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      })
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Unknown error"
+      console.error("[Contact API] Error contacting Web3Forms:", {
+        error: errorMsg,
+        endpoint: WEB3FORMS_ENDPOINT,
+        timestamp: new Date().toISOString(),
+      })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unable to process your message at this time. Please try again in a few moments.",
+          code: "SUBMISSION_SERVICE_ERROR",
+        },
+        { status: 503 }
+      )
+    }
 
-    const web3formsResult = await web3formsResponse.json()
+    if (!web3formsResponse.ok) {
+      console.error(
+        `[Contact API] Web3Forms returned status ${web3formsResponse.status}`,
+        {
+          status: web3formsResponse.status,
+          statusText: web3formsResponse.statusText,
+        }
+      )
+
+      let userMessage = "Unable to process your message. Please try again later."
+      if (web3formsResponse.status === 401 || web3formsResponse.status === 403) {
+        userMessage = "Server authentication failed. Please contact support."
+      } else if (web3formsResponse.status === 429) {
+        userMessage = "Too many submissions. Please wait a moment and try again."
+      } else if (web3formsResponse.status >= 500) {
+        userMessage = "The submission service is temporarily unavailable. Please try again in a few moments."
+      }
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: userMessage,
+          code: "SUBMISSION_SERVICE_ERROR",
+        },
+        { status: 503 }
+      )
+    }
+
+    let web3formsResult: any
+    try {
+      web3formsResult = await web3formsResponse.json()
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Unknown error"
+      console.error("[Contact API] Error parsing Web3Forms response:", {
+        error: errorMsg,
+        status: web3formsResponse.status,
+      })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Received invalid response from submission service. Please try again.",
+          code: "RESPONSE_PARSE_ERROR",
+        },
+        { status: 503 }
+      )
+    }
 
     if (!web3formsResult.success) {
-      console.error("[Contact API] Web3Forms submission failed:", web3formsResult)
+      console.error("[Contact API] Web3Forms submission failed:", {
+        response: web3formsResult,
+        senderEmail: email,
+      })
+
       return NextResponse.json(
-        { success: false, message: web3formsResult.message || "Submission failed. Please try again." },
+        {
+          success: false,
+          message: web3formsResult.message || "Your message could not be sent. Please try again.",
+          code: "SUBMISSION_REJECTED",
+        },
         { status: 400 }
       )
     }
