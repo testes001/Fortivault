@@ -5,11 +5,14 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 import type { WizardData } from "@/components/fraud-reporting-wizard"
 
 interface DetailsStepProps {
   data: WizardData
   updateData: (updates: Partial<WizardData>) => void
+  showError?: boolean
 }
 
 const currencies = [
@@ -33,7 +36,7 @@ const timeframes = [
   { value: "6-months-plus", label: "More than 6 months ago" },
 ]
 
-export function DetailsStep({ data, updateData }: DetailsStepProps) {
+export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const handleAmountChange = (value: string) => {
@@ -85,6 +88,14 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
 
   return (
     <div className="space-y-6">
+      {showError && (!data.amount || !data.currency || !data.timeline || !data.description) && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Please fill out all required fields: Amount, Currency, Timeline, and Description.
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="amount" className="font-medium">
