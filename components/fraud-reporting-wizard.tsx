@@ -112,7 +112,17 @@ export function FraudReportingWizard() {
   const prevStep = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
+      setShowStepError(false)
     }
+  }
+
+  const resetWizard = () => {
+    setData(initialData)
+    setCurrentStep(0)
+    setIsSubmitted(false)
+    setSubmissionError("")
+    setCaseId("")
+    setShowStepError(false)
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
