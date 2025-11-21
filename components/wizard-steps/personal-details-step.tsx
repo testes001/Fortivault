@@ -38,6 +38,14 @@ export function PersonalDetailsStep({ data, updateData, showError = false }: Per
 
   return (
     <div className="space-y-6">
+      {showError && (
+        <Alert variant="destructive" role="alert">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Please fill in all required fields (Name and Email)
+          </AlertDescription>
+        </Alert>
+      )}
       <div>
         <h3 className="text-lg font-semibold mb-4" id="personal-details-heading">
           Your Details
