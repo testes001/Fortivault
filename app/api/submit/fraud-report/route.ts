@@ -272,10 +272,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse web3forms response
+    // Parse web3forms response with explicit body consumption guard
     let web3formsResult: any
     try {
-      web3formsResult = await web3formsResponse.json()
+      // Ensure response body hasn't been consumed yet
+      if (!web3formsResponse.bodyUsed) {
+        web3formsResult = await web3formsResponse.json()
+      } else {
+        throw new Error("Response body was already consumed")
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Unknown error"
       console.error("[Fraud Report API] Error parsing Web3Forms response:", {
