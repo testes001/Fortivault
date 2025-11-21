@@ -9,10 +9,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  server: {
-    port: 12000,
-    host: '0.0.0.0',
-  },
   headers: async () => [
     {
       source: "/(.*)",
