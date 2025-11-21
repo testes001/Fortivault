@@ -228,7 +228,7 @@ export function FraudReportingWizard() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {submissionError && (
+          {submissionError && currentStep === steps.length - 1 && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <div className="flex items-center justify-between gap-4 w-full">
