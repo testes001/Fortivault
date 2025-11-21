@@ -165,16 +165,18 @@ export function FraudReportingWizard() {
         body: formData,
       })
 
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status} ${response.statusText}`)
-      }
-
       const contentType = response.headers.get("content-type")
       if (!contentType || !contentType.includes("application/json")) {
         throw new Error("Server returned invalid response format")
       }
 
       const result = await response.json()
+
+      if (!response.ok) {
+        const errorMessage =
+          result.message || result.errors?.[0] || `Server error: ${response.status}`
+        throw new Error(errorMessage)
+      }
 
       if (result.success) {
         setCaseId(result.caseId)
