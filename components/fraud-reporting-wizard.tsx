@@ -222,7 +222,18 @@ export function FraudReportingWizard() {
           {submissionError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{submissionError}</AlertDescription>
+              <div className="flex items-center justify-between gap-4 w-full">
+                <AlertDescription>{submissionError}</AlertDescription>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSubmissionError("")}
+                  className="flex-shrink-0 gap-2"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Retry
+                </Button>
+              </div>
             </Alert>
           )}
 
