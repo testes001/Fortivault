@@ -189,15 +189,25 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
         </p>
       </div>
 
+      {errors.reference && (
+        <Alert variant="destructive" role="alert">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errors.reference}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-4">
         <div className="flex gap-2">
           <Input
             placeholder="Enter reference number"
             value={newReference}
-            onChange={(e) => setNewReference(e.target.value)}
+            onChange={(e) => {
+              setNewReference(e.target.value)
+              if (errors.reference) setErrors({})
+            }}
             onKeyPress={(e) => e.key === "Enter" && addBankReference()}
             aria-labelledby="bank-heading"
-            aria-describedby="bank-hint"
+            aria-describedby={errors.reference ? "bank-error" : "bank-hint"}
             className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
           />
           <Button
@@ -209,9 +219,15 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
             <Plus className="w-4 h-4" aria-hidden="true" />
           </Button>
         </div>
-        <p id="bank-hint" className="text-xs text-muted-foreground">
-          Press Enter or click Add to include a reference number
-        </p>
+        {errors.reference ? (
+          <p id="bank-error" className="text-xs text-red-500" role="alert">
+            {errors.reference}
+          </p>
+        ) : (
+          <p id="bank-hint" className="text-xs text-muted-foreground">
+            Press Enter or click Add to include a reference number
+          </p>
+        )}
 
         {data.bankReferences.length > 0 && (
           <div className="space-y-2">
