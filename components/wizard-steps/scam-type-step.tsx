@@ -1,12 +1,15 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Bitcoin, CreditCard, AlertTriangle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Bitcoin, CreditCard, AlertTriangle, AlertCircle } from "lucide-react"
 import type { WizardData } from "@/components/fraud-reporting-wizard"
 
 interface ScamTypeStepProps {
   data: WizardData
   updateData: (updates: Partial<WizardData>) => void
+  showError?: boolean
 }
 
 const scamTypes = [
