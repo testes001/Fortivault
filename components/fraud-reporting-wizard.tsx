@@ -52,6 +52,19 @@ const steps = [
 ]
 
 export function FraudReportingWizard() {
+    const [submissionError, setSubmissionError] = useState("")
+
+    // Client-side validation for required fields
+    const validateForm = () => {
+      if (!data.fullName) return "Full Name is required."
+      if (!data.contactEmail) return "Email is required."
+      if (!data.scamType) return "Scam Type is required."
+      if (!data.amount || !data.currency) return "Amount and currency are required."
+      if (!data.timeline) return "Timeline is required."
+      if (!data.description) return "Description is required."
+      if (data.transactionHashes.length === 0 && data.bankReferences.length === 0) return "At least one transaction hash or bank reference is required."
+      return null
+    }
   const [currentStep, setCurrentStep] = useState(0)
   const [data, setData] = useState<WizardData>(initialData)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -76,15 +89,26 @@ export function FraudReportingWizard() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setSubmissionError("")
+    const validationError = validateForm()
+    if (validationError) {
+      setSubmissionError(validationError)
+      setIsSubmitting(false)
+      return
+    }
     setIsSubmitting(true)
+  // ...existing code...
+  // Render error message if present
+  // Place this in your JSX where appropriate (e.g., above the form)
+  // {submissionError && <div className="text-red-500 mb-4">{submissionError}</div>}
 
     const generatedCaseId = `CSRU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
     setCaseId(generatedCaseId)
 
     const formData = new FormData()
 
-    // Web3Forms access key
-    formData.append('access_key', '8b7b966f-b99c-44bd-ae50-fee2a626402f')
+    // Web3Forms access key from environment variable
+    formData.append('access_key', process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY || '')
 
     // Email settings
     formData.append('subject', `New Fraud Report Submitted: ${generatedCaseId}`)
@@ -120,12 +144,11 @@ export function FraudReportingWizard() {
       if (result.success) {
         setIsSubmitted(true)
       } else {
-        console.error("Web3Forms API Error:", result)
-        // You could add error handling here
+        setSubmissionError(result.message || "Submission failed. Please try again later.")
         setIsSubmitting(false)
       }
     } catch (error) {
-      console.error("Fetch API Error:", error)
+      setSubmissionError("Network error. Please check your connection and try again.")
       setIsSubmitting(false)
     }
   }

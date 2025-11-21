@@ -11,17 +11,32 @@ import { Mail, Phone, MapPin, Clock } from "lucide-react"
 import { toast } from "sonner"
 
 export default function ContactPage() {
+    const [formError, setFormError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setFormError("")
+    const form = event.currentTarget
+    const name = form.name.value.trim()
+    const email = form.email.value.trim()
+    const subject = form.subject.value.trim()
+    const message = form.message.value.trim()
+    if (!name || !email || !subject || !message) {
+      setFormError("All fields except phone are required.")
+      setIsSubmitting(false)
+      return
+    }
     setIsSubmitting(true)
-
-    const formData = new FormData(event.currentTarget)
-    formData.append("access_key", "8b7b966f-b99c-44bd-ae50-fee2a626402f")
+    const formData = new FormData(form)
+    formData.append("access_key", process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY || "")
     formData.append("subject", "New Contact Form Submission from Fortivault")
     formData.append("from_name", "Fortivault Contact Form")
     formData.append("email_to", "hybe.corp@zohomail.com, fortivaultcybercure@gmail.com")
+  // ...existing code...
+  // Render error message if present
+  // Place this in your JSX where appropriate (e.g., above the form)
+  // {formError && <div className="text-red-500 mb-4">{formError}</div>}
 
     try {
       const response = await fetch("https://api.web3forms.com/submit", {
@@ -35,10 +50,10 @@ export default function ContactPage() {
         toast.success("Message sent successfully!")
         ;(event.target as HTMLFormElement).reset()
       } else {
-        toast.error("Something went wrong. Please try again.")
+        toast.error(result.message || "Submission failed. Please try again later.")
       }
     } catch (error) {
-      toast.error("Something went wrong. Please try again.")
+      toast.error("Network error. Please check your connection and try again.")
     } finally {
       setIsSubmitting(false)
     }
