@@ -167,20 +167,52 @@ export async function POST(request: NextRequest) {
       web3formsResponse = await fetch(WEB3FORMS_ENDPOINT, {
         method: "POST",
         body: web3formsData,
+        signal: AbortSignal.timeout(10000), // 10 second timeout
       })
     } catch (error) {
-      console.error("[Fraud Report API] Error contacting Web3Forms:", error)
+      const errorMsg = error instanceof Error ? error.message : "Unknown error"
+      console.error("[Fraud Report API] Error contacting Web3Forms:", {
+        error: errorMsg,
+        endpoint: WEB3FORMS_ENDPOINT,
+        timestamp: new Date().toISOString(),
+      })
       return NextResponse.json(
-        { success: false, message: "Unable to submit form. Please try again later." },
-        { status: 500 }
+        {
+          success: false,
+          message: "Unable to process your submission at this time. Please try again in a few moments.",
+          code: "SUBMISSION_SERVICE_ERROR",
+          details: "The form submission service is temporarily unavailable.",
+        },
+        { status: 503 }
       )
     }
 
     if (!web3formsResponse.ok) {
-      console.error(`[Fraud Report API] Web3Forms returned ${web3formsResponse.status}`)
+      console.error(
+        `[Fraud Report API] Web3Forms returned status ${web3formsResponse.status}`,
+        {
+          status: web3formsResponse.status,
+          statusText: web3formsResponse.statusText,
+        }
+      )
+
+      // More specific error messages based on status code
+      let userMessage = "Unable to process your submission. Please try again later."
+      if (web3formsResponse.status === 401 || web3formsResponse.status === 403) {
+        userMessage = "Server authentication failed. Please contact support."
+      } else if (web3formsResponse.status === 429) {
+        userMessage = "Too many submissions. Please wait a moment and try again."
+      } else if (web3formsResponse.status >= 500) {
+        userMessage = "The submission service is temporarily unavailable. Please try again in a few moments."
+      }
+
       return NextResponse.json(
-        { success: false, message: "Submission service unavailable. Please try again later." },
-        { status: 500 }
+        {
+          success: false,
+          message: userMessage,
+          code: "SUBMISSION_SERVICE_ERROR",
+        },
+        { status: 503 }
       )
     }
 
