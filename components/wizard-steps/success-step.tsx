@@ -64,6 +64,16 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
               <h2 className="text-2xl font-bold">Processing Your Report</h2>
               <p className="text-muted-foreground">Please wait while we securely process your fraud report...</p>
 
+              <div className="space-y-2 mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Upload Progress</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {Math.round((completedSteps.length / 4) * 100)}%
+                  </span>
+                </div>
+                <Progress value={(completedSteps.length / 4) * 100} className="w-full" />
+              </div>
+
               <div className="space-y-3 mt-6">
                 {progressMessages.map((message, index) => (
                   <motion.div
