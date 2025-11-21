@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { validateContactForm } from "@/lib/utils/validation"
 import { validateApiKey } from "@/lib/config/api-key-validator"
+import { handleWeb3FormsError } from "@/lib/config/web3forms-error-handler"
 import { rateLimiter } from "@/lib/security/rate-limiter"
 
 const RATE_LIMIT_CONFIG = {
@@ -123,25 +124,19 @@ export async function POST(request: NextRequest) {
         {
           status: web3formsResponse.status,
           statusText: web3formsResponse.statusText,
+          response: web3formsResult,
         }
       )
 
-      let userMessage = "Unable to process your message. Please try again later."
-      if (web3formsResponse.status === 401 || web3formsResponse.status === 403) {
-        userMessage = "Server authentication failed. Please contact support."
-      } else if (web3formsResponse.status === 429) {
-        userMessage = "Too many submissions. Please wait a moment and try again."
-      } else if (web3formsResponse.status >= 500) {
-        userMessage = "The submission service is temporarily unavailable. Please try again in a few moments."
-      }
+      const errorDetails = handleWeb3FormsError(web3formsResponse.status)
 
       return NextResponse.json(
         {
           success: false,
-          message: userMessage,
-          code: "SUBMISSION_SERVICE_ERROR",
+          message: errorDetails.userMessage,
+          code: errorDetails.code,
         },
-        { status: 503 }
+        { status: errorDetails.statusCode }
       )
     }
 
