@@ -268,7 +268,7 @@ export function FraudReportingWizard() {
             >
               {currentStep === 0 && <ScamTypeStep data={data} updateData={updateData} showError={showStepError} />}
               {currentStep === 1 && <PersonalDetailsStep data={data} updateData={updateData} showError={showStepError} />}
-              {currentStep === 2 && <DetailsStep data={data} updateData={updateData} />}
+              {currentStep === 2 && <DetailsStep data={data} updateData={updateData} showError={showStepError} />}
               {currentStep === 3 && <TransactionStep data={data} updateData={updateData} />}
               {currentStep === 4 && <EvidenceStep data={data} updateData={updateData} />}
               {currentStep === 5 && <ConfirmationStep data={data} updateData={updateData} />}
