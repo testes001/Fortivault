@@ -167,29 +167,27 @@ export function FraudReportingWizard() {
       })
 
       let result: any
-      const contentType = response.headers.get("content-type")
+      const status = response.status
 
-      if (contentType?.includes("application/json")) {
-        try {
-          result = await response.json()
-        } catch (parseError) {
-          // If response body was already consumed, try creating a fresh error response
-          if (parseError instanceof Error && parseError.message.includes("already read")) {
-            result = {
-              success: false,
-              message: "Server response could not be read. Please try again.",
-            }
-          } else {
-            throw new Error(`Failed to parse response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`)
-          }
+      try {
+        const blob = await response.blob()
+        const text = await blob.text()
+        if (text) {
+          result = JSON.parse(text)
+        } else {
+          result = { success: status === 201, message: "Empty response" }
         }
-      } else {
-        result = { success: false, message: "Invalid response from server" }
+      } catch (parseError) {
+        console.error("Response parsing error:", parseError)
+        result = {
+          success: false,
+          message: `Failed to parse server response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`,
+        }
       }
 
-      if (!response.ok) {
+      if (status >= 400) {
         const errorMessage =
-          result.message || result.errors?.[0] || `Server error: ${response.status}`
+          result.message || result.errors?.[0] || `Server error: ${status}`
         throw new Error(errorMessage)
       }
 
