@@ -99,8 +99,13 @@ export function FraudReportingWizard() {
   }
 
   const nextStep = () => {
+    if (!canProceed()) {
+      setShowStepError(true)
+      return
+    }
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
+      setShowStepError(false)
     }
   }
 
