@@ -99,10 +99,10 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
       <div className="space-y-6">
         <div>
           <h3 className="text-lg font-semibold mb-4" id="crypto-heading">
-            Cryptocurrency Transaction Information <span className="text-gray-400 text-sm">(Optional)</span>
+            Cryptocurrency Transaction Information <span className="text-red-500" aria-label="required">*</span>
           </h3>
           <p className="text-muted-foreground mb-4">
-            If available, provide any transaction hashes (TXIDs) related to the fraudulent transfers.
+            Provide at least one transaction hash (TXID) related to the fraudulent transfers.
           </p>
         </div>
 
@@ -182,10 +182,10 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-4" id="bank-heading">
-          Bank Transfer Information <span className="text-gray-400 text-sm">(Optional)</span>
+          Bank Transfer Information <span className="text-red-500" aria-label="required">*</span>
         </h3>
         <p className="text-muted-foreground mb-4">
-          If available, provide any bank transfer references, wire transfer numbers, or payment confirmation numbers.
+          Provide at least one bank transfer reference, wire transfer number, or payment confirmation number.
         </p>
       </div>
 
