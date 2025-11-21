@@ -118,8 +118,8 @@ export function FraudReportingWizard() {
     // Email settings
     formData.append('subject', `New Fraud Report Submitted: ${generatedCaseId}`)
     formData.append('from_name', 'Fortivault Cybercure')
-    formData.append('reply_to', data.contactEmail)
-    formData.append('email_to', 'hybe.corp@zohomail.com, fortivaultcybercure@gmail.com')
+    formData.append('replyto', data.contactEmail)
+    formData.append('ccemail', `${process.env.NEXT_PUBLIC_PRIMARY_EMAIL}, ${process.env.NEXT_PUBLIC_CC_EMAIL}`)
 
     // Append form data
     formData.append('caseId', generatedCaseId)
