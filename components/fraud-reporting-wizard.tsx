@@ -102,25 +102,32 @@ export function FraudReportingWizard() {
     setIsSubmitting(true)
 
     try {
+      // Create FormData to handle file uploads
+      const formData = new FormData()
+
+      // Add form fields
+      formData.append("fullName", data.fullName)
+      formData.append("contactEmail", data.contactEmail)
+      formData.append("contactPhone", data.contactPhone)
+      formData.append("scamType", data.scamType)
+      formData.append("amount", data.amount)
+      formData.append("currency", data.currency)
+      formData.append("timeline", data.timeline)
+      formData.append("description", data.description)
+
+      // Add arrays as JSON strings
+      formData.append("transactionHashes", JSON.stringify(data.transactionHashes))
+      formData.append("bankReferences", JSON.stringify(data.bankReferences))
+
+      // Add file attachments
+      data.evidenceFiles.forEach((file) => {
+        formData.append("files", file)
+      })
+
       const response = await fetch("/api/report", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fullName: data.fullName,
-          contactEmail: data.contactEmail,
-          contactPhone: data.contactPhone,
-          scamType: data.scamType,
-          amount: data.amount,
-          currency: data.currency,
-          timeline: data.timeline,
-          description: data.description,
-          transactionHashes: data.transactionHashes,
-          bankReferences: data.bankReferences,
-          fileCount: data.evidenceFiles.length,
-          fileNames: data.evidenceFiles.map((f) => f.name),
-        }),
+        body: formData,
+        // Don't set Content-Type header - browser will set it with correct boundary
       })
 
       const result = await response.json()
