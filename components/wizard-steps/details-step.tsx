@@ -38,11 +38,35 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
 
   const handleAmountChange = (value: string) => {
     const num = parseFloat(value)
-    if (value === "" || (num >= 0 && !isNaN(num))) {
+
+    if (value === "") {
       updateData({ amount: value })
-      if (errors.amount) {
-        setErrors({ ...errors, amount: "" })
-      }
+      setErrors({ ...errors, amount: "" })
+    } else if (isNaN(num) || num <= 0) {
+      setErrors({ ...errors, amount: "Amount must be greater than 0" })
+    } else {
+      updateData({ amount: value })
+      setErrors({ ...errors, amount: "" })
+    }
+  }
+
+  const handleAmountBlur = (value: string) => {
+    if (value && (isNaN(parseFloat(value)) || parseFloat(value) <= 0)) {
+      setErrors({ ...errors, amount: "Amount must be greater than 0" })
+    }
+  }
+
+  const handleCurrencyChange = (value: string) => {
+    updateData({ currency: value })
+    if (errors.currency) {
+      setErrors({ ...errors, currency: "" })
+    }
+  }
+
+  const handleTimelineChange = (value: string) => {
+    updateData({ timeline: value })
+    if (errors.timeline) {
+      setErrors({ ...errors, timeline: "" })
     }
   }
 
@@ -50,6 +74,12 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
     updateData({ description: value })
     if (errors.description && value.trim().length > 0) {
       setErrors({ ...errors, description: "" })
+    }
+  }
+
+  const handleDescriptionBlur = (value: string) => {
+    if (!value.trim()) {
+      setErrors({ ...errors, description: "Description is required" })
     }
   }
 
