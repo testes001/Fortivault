@@ -107,6 +107,7 @@ export function PersonalDetailsStep({ data, updateData, showError = false }: Per
             placeholder="you@example.com"
             value={data.contactEmail}
             onChange={(e) => handleEmailChange(e.target.value)}
+            onBlur={(e) => handleEmailBlur(e.target.value)}
             aria-labelledby="contactEmail"
             aria-describedby={errors.contactEmail ? "contactEmail-error" : "contactEmail-hint"}
             aria-required="true"
