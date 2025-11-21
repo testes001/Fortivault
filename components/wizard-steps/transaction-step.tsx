@@ -51,7 +51,9 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
     return (
       <div className="space-y-6">
         <div>
-          <h3 className="text-lg font-semibold mb-4">Cryptocurrency Transaction Information</h3>
+          <h3 className="text-lg font-semibold mb-4" id="crypto-heading">
+            Cryptocurrency Transaction Information
+          </h3>
           <p className="text-muted-foreground mb-4">
             Please provide any transaction hashes (TXIDs) related to the fraudulent transfers.
           </p>
@@ -64,23 +66,46 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
               value={newHash}
               onChange={(e) => setNewHash(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && addTransactionHash()}
+              aria-labelledby="crypto-heading"
+              aria-describedby="crypto-hint"
+              className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
             />
-            <Button onClick={addTransactionHash} disabled={!newHash.trim()}>
-              <Plus className="w-4 h-4" />
+            <Button
+              onClick={addTransactionHash}
+              disabled={!newHash.trim()}
+              aria-label="Add transaction hash"
+              className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+            >
+              <Plus className="w-4 h-4" aria-hidden="true" />
             </Button>
           </div>
+          <p id="crypto-hint" className="text-xs text-muted-foreground">
+            Press Enter or click Add to include a transaction hash
+          </p>
 
           {data.transactionHashes.length > 0 && (
             <div className="space-y-2">
-              <Label>Transaction Hashes:</Label>
-              <div className="flex flex-wrap gap-2">
+              <Label className="font-medium">
+                Transaction Hashes <span className="text-primary">({data.transactionHashes.length})</span>
+              </Label>
+              <div className="flex flex-wrap gap-2" role="list">
                 {data.transactionHashes.map((hash, index) => (
-                  <Badge key={index} variant="secondary" className="flex items-center gap-2">
-                    <span className="font-mono text-xs">{hash.slice(0, 16)}...</span>
-                    <button onClick={() => removeTransactionHash(index)} className="hover:text-destructive">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
+                  <div key={index} role="listitem" className="relative group">
+                    <Badge
+                      variant="secondary"
+                      className="flex items-center gap-2 pr-0 pl-4 py-2 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary transition-all"
+                      title={hash}
+                    >
+                      <span className="font-mono text-xs">{hash.slice(0, 16)}...</span>
+                      <button
+                        onClick={() => removeTransactionHash(index)}
+                        className="hover:text-destructive focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-destructive rounded px-1 transition-all"
+                        aria-label={`Remove transaction hash ${hash}`}
+                      >
+                        <X className="w-3 h-3" aria-hidden="true" />
+                      </button>
+                    </Badge>
+                  </div>
                 ))}
               </div>
             </div>
@@ -93,7 +118,9 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Bank Transfer Information</h3>
+        <h3 className="text-lg font-semibold mb-4" id="bank-heading">
+          Bank Transfer Information
+        </h3>
         <p className="text-muted-foreground mb-4">
           Please provide any bank transfer references, wire transfer numbers, or payment confirmation numbers.
         </p>
@@ -106,23 +133,46 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
             value={newReference}
             onChange={(e) => setNewReference(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && addBankReference()}
+            aria-labelledby="bank-heading"
+            aria-describedby="bank-hint"
+            className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
           />
-          <Button onClick={addBankReference} disabled={!newReference.trim()}>
-            <Plus className="w-4 h-4" />
+          <Button
+            onClick={addBankReference}
+            disabled={!newReference.trim()}
+            aria-label="Add bank reference"
+            className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+          >
+            <Plus className="w-4 h-4" aria-hidden="true" />
           </Button>
         </div>
+        <p id="bank-hint" className="text-xs text-muted-foreground">
+          Press Enter or click Add to include a reference number
+        </p>
 
         {data.bankReferences.length > 0 && (
           <div className="space-y-2">
-            <Label>Bank References:</Label>
-            <div className="flex flex-wrap gap-2">
+            <Label className="font-medium">
+              Bank References <span className="text-primary">({data.bankReferences.length})</span>
+            </Label>
+            <div className="flex flex-wrap gap-2" role="list">
               {data.bankReferences.map((ref, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-2">
-                  <span>{ref}</span>
-                  <button onClick={() => removeBankReference(index)} className="hover:text-destructive">
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
+                <div key={index} role="listitem" className="relative group">
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-2 pr-0 pl-4 py-2 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary transition-all"
+                    title={ref}
+                  >
+                    <span className="truncate max-w-xs">{ref}</span>
+                    <button
+                      onClick={() => removeBankReference(index)}
+                      className="hover:text-destructive focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-destructive rounded px-1 transition-all"
+                      aria-label={`Remove reference ${ref}`}
+                    >
+                      <X className="w-3 h-3" aria-hidden="true" />
+                    </button>
+                  </Badge>
+                </div>
               ))}
             </div>
           </div>
