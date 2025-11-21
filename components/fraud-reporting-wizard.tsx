@@ -207,7 +207,7 @@ export function FraudReportingWizard() {
   }
 
   if (isSubmitted) {
-    return <SuccessStep caseId={caseId} userEmail={data.contactEmail} />
+    return <SuccessStep caseId={caseId} userEmail={data.contactEmail} onSubmitAnother={resetWizard} />
   }
 
   const progress = ((currentStep + 1) / steps.length) * 100
