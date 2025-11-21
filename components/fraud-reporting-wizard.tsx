@@ -166,7 +166,8 @@ export function FraudReportingWizard() {
         // Browser automatically sets Content-Type: multipart/form-data
       })
 
-      const result = await response.json()
+      const responseClone = response.clone()
+      const result = await responseClone.json()
 
       if (!response.ok) {
         const errorMessage =
