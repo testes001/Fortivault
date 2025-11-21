@@ -166,8 +166,12 @@ export function FraudReportingWizard() {
         // Browser automatically sets Content-Type: multipart/form-data
       })
 
-      const responseClone = response.clone()
-      const result = await responseClone.json()
+      let result: any
+      try {
+        result = await response.json()
+      } catch (parseError) {
+        throw new Error(`Failed to parse response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`)
+      }
 
       if (!response.ok) {
         const errorMessage =
