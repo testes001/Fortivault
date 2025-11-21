@@ -186,6 +186,7 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
           className="min-h-[120px] focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
           value={data.description}
           onChange={(e) => handleDescriptionChange(e.target.value)}
+          onBlur={(e) => handleDescriptionBlur(e.target.value)}
           aria-labelledby="description"
           aria-describedby={errors.description ? "description-error" : "description-hint"}
           aria-required="true"
