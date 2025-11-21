@@ -98,41 +98,59 @@ export async function POST(request: NextRequest) {
 
     const contentType = request.headers.get("content-type") || ""
 
-    if (!contentType.includes("application/json")) {
+    if (!contentType.includes("multipart/form-data")) {
       return NextResponse.json(
-        { success: false, message: "Invalid content type. Expected application/json." },
+        { success: false, message: "Invalid content type. Expected multipart/form-data." },
         { status: 400 }
       )
     }
 
-    let body: any
+    let formData: FormData
     try {
-      body = await request.json()
+      formData = await request.formData()
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Unknown parsing error"
-      console.error("[Fraud Report API] Error parsing JSON:", errorMsg)
+      console.error("[Fraud Report API] Error parsing FormData:", errorMsg)
       return NextResponse.json(
         {
           success: false,
-          message: "Invalid request format. Please ensure you are sending valid JSON.",
-          code: "INVALID_JSON",
-          details: "The request body could not be parsed as JSON.",
+          message: "Invalid request format. Please ensure you are sending valid form data.",
+          code: "INVALID_FORM_DATA",
         },
         { status: 400 }
       )
     }
 
-    const fullName = body.fullName || ""
-    const contactEmail = body.contactEmail || ""
-    const contactPhone = body.contactPhone || ""
-    const scamType = body.scamType || ""
-    const amount = body.amount || ""
-    const currency = body.currency || ""
-    const timeline = body.timeline || ""
-    const description = body.description || ""
-    const transactionHashes = Array.isArray(body.transactionHashes) ? body.transactionHashes : []
-    const bankReferences = Array.isArray(body.bankReferences) ? body.bankReferences : []
-    const filesCount = body.filesCount || 0
+    // Extract form fields
+    const fullName = formData.get("fullName")?.toString() || ""
+    const contactEmail = formData.get("contactEmail")?.toString() || ""
+    const contactPhone = formData.get("contactPhone")?.toString() || ""
+    const scamType = formData.get("scamType")?.toString() || ""
+    const amount = formData.get("amount")?.toString() || ""
+    const currency = formData.get("currency")?.toString() || ""
+    const timeline = formData.get("timeline")?.toString() || ""
+    const description = formData.get("description")?.toString() || ""
+    const filesCount = parseInt(formData.get("filesCount")?.toString() || "0", 10)
+
+    // Parse JSON arrays
+    let transactionHashes: string[] = []
+    let bankReferences: string[] = []
+    try {
+      const txHashesStr = formData.get("transactionHashes")?.toString() || "[]"
+      transactionHashes = JSON.parse(txHashesStr)
+      const bankRefsStr = formData.get("bankReferences")?.toString() || "[]"
+      bankReferences = JSON.parse(bankRefsStr)
+    } catch (error) {
+      console.error("[Fraud Report API] Error parsing arrays:", error)
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid format for transaction or bank references.",
+          code: "INVALID_ARRAY_FORMAT",
+        },
+        { status: 400 }
+      )
+    }
 
     console.log("[Fraud Report API] Received submission:", {
       fullName,
@@ -143,6 +161,7 @@ export async function POST(request: NextRequest) {
       filesCount,
     })
 
+    // Validate form data
     const validation = validateFraudReport({
       fullName,
       contactEmail,
@@ -179,6 +198,45 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Extract and validate files
+    const files: File[] = []
+    const fileErrors: string[] = []
+    let totalFileSize = 0
+
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith("evidenceFile_") && value instanceof File) {
+        const fileValidation = validateFile(value)
+        if (!fileValidation.valid) {
+          fileErrors.push(fileValidation.error || `File validation failed for ${value.name}`)
+          continue
+        }
+
+        totalFileSize += value.size
+        if (totalFileSize > MAX_TOTAL_SIZE_BYTES) {
+          fileErrors.push(
+            `Total file size (${(totalFileSize / (1024 * 1024)).toFixed(2)}MB) exceeds maximum of ${MAX_TOTAL_SIZE_BYTES / (1024 * 1024)}MB`
+          )
+          break
+        }
+
+        files.push(value)
+      }
+    }
+
+    if (fileErrors.length > 0) {
+      console.error("[Fraud Report API] File validation errors:", fileErrors)
+      return NextResponse.json(
+        {
+          success: false,
+          message: "File validation failed",
+          errors: fileErrors,
+          code: "FILE_VALIDATION_ERROR",
+        },
+        { status: 400 }
+      )
+    }
+
+    // Create FormData for web3forms with actual files
     const web3formsData = new FormData()
     web3formsData.append("access_key", WEB3FORMS_API_KEY)
     web3formsData.append("form_name", "fraud-report")
@@ -192,10 +250,15 @@ export async function POST(request: NextRequest) {
     web3formsData.append("description", description)
     web3formsData.append("transactionHashes", JSON.stringify(transactionHashes))
     web3formsData.append("bankReferences", JSON.stringify(bankReferences))
-    web3formsData.append("filesCount", filesCount.toString())
+    web3formsData.append("filesCount", files.length.toString())
     web3formsData.append("clientIp", clientIp)
     web3formsData.append("userAgent", request.headers.get("user-agent") || "unknown")
     web3formsData.append("submittedAt", new Date().toISOString())
+
+    // Append actual files to web3forms submission
+    files.forEach((file, index) => {
+      web3formsData.append(`file_${index}`, file, file.name)
+    })
 
     let web3formsResponse: Response
     try {
