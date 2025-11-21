@@ -10,6 +10,18 @@ const RATE_LIMIT_CONFIG = {
 const WEB3FORMS_API_KEY = process.env.WEB3FORMS_API_KEY
 const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit"
 
+// File upload constraints
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB per file
+const MAX_TOTAL_SIZE_BYTES = 50 * 1024 * 1024 // 50MB total
+const ALLOWED_FILE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "application/pdf",
+  "text/plain",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]
+
 export const runtime = "nodejs"
 
 /**
@@ -30,6 +42,29 @@ function validateConfiguration(): { valid: boolean; error?: string } {
     return {
       valid: false,
       error: "WEB3FORMS_API_KEY is empty. Please provide a valid API key.",
+    }
+  }
+
+  return { valid: true }
+}
+
+/**
+ * Validates a file's size and type
+ */
+function validateFile(file: File): { valid: boolean; error?: string } {
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(2)
+    const maxMB = MAX_FILE_SIZE_BYTES / (1024 * 1024)
+    return {
+      valid: false,
+      error: `File "${file.name}" exceeds maximum size of ${maxMB}MB (actual: ${sizeMB}MB)`,
+    }
+  }
+
+  if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+    return {
+      valid: false,
+      error: `File "${file.name}" has unsupported type "${file.type}". Allowed types: JPG, PNG, PDF, TXT, DOC, DOCX`,
     }
   }
 
