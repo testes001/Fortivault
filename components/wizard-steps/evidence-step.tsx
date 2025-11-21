@@ -90,11 +90,14 @@ export function EvidenceStep({ data, updateData }: EvidenceStepProps) {
   )
 
   const removeFile = (indexToRemove: number) => {
+    const newFiles = data.evidenceFiles.filter((_, index) => index !== indexToRemove)
     updateData({
-      evidenceFiles: data.evidenceFiles.filter((_, index) => index !== indexToRemove),
+      evidenceFiles: newFiles,
     })
-    // Clear errors when removing files
-    setFileErrors([])
+
+    if (newFiles.length === 0) {
+      setFileErrors([])
+    }
   }
 
   const totalSize = getTotalFileSize()
