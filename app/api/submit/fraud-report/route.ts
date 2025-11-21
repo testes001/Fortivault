@@ -260,60 +260,41 @@ export async function POST(request: NextRequest) {
       web3formsData.append(`file_${index}`, file, file.name)
     })
 
+    // Submit to web3forms with file attachments
     let web3formsResponse: Response
     try {
       web3formsResponse = await fetch(WEB3FORMS_ENDPOINT, {
         method: "POST",
         body: web3formsData,
-        signal: AbortSignal.timeout(10000), // 10 second timeout
+        signal: AbortSignal.timeout(30000), // 30 second timeout for file uploads
       })
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Unknown error"
       console.error("[Fraud Report API] Error contacting Web3Forms:", {
         error: errorMsg,
         endpoint: WEB3FORMS_ENDPOINT,
+        filesSubmitted: files.length,
+        totalFileSize: totalFileSize,
         timestamp: new Date().toISOString(),
       })
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Unable to process your submission at this time. Please try again in a few moments.",
-          code: "SUBMISSION_SERVICE_ERROR",
-          details: "The form submission service is temporarily unavailable.",
-        },
-        { status: 503 }
-      )
-    }
 
-    if (!web3formsResponse.ok) {
-      console.error(
-        `[Fraud Report API] Web3Forms returned status ${web3formsResponse.status}`,
-        {
-          status: web3formsResponse.status,
-          statusText: web3formsResponse.statusText,
-        }
-      )
-
-      // More specific error messages based on status code
-      let userMessage = "Unable to process your submission. Please try again later."
-      if (web3formsResponse.status === 401 || web3formsResponse.status === 403) {
-        userMessage = "Server authentication failed. Please contact support."
-      } else if (web3formsResponse.status === 429) {
-        userMessage = "Too many submissions. Please wait a moment and try again."
-      } else if (web3formsResponse.status >= 500) {
-        userMessage = "The submission service is temporarily unavailable. Please try again in a few moments."
-      }
+      // Handle timeout vs other network errors
+      const isTimeout = errorMsg.includes("timeout") || errorMsg.includes("signal")
+      const message = isTimeout
+        ? "File upload took too long. Please try again with smaller files."
+        : "Unable to process your submission at this time. Please try again in a few moments."
 
       return NextResponse.json(
         {
           success: false,
-          message: userMessage,
+          message,
           code: "SUBMISSION_SERVICE_ERROR",
         },
         { status: 503 }
       )
     }
 
+    // Parse web3forms response
     let web3formsResult: any
     try {
       web3formsResult = await web3formsResponse.json()
@@ -322,6 +303,7 @@ export async function POST(request: NextRequest) {
       console.error("[Fraud Report API] Error parsing Web3Forms response:", {
         error: errorMsg,
         status: web3formsResponse.status,
+        statusText: web3formsResponse.statusText,
       })
       return NextResponse.json(
         {
@@ -333,13 +315,56 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!web3formsResult.success) {
-      console.error("[Fraud Report API] Web3Forms submission failed:", {
+    // Check for web3forms response errors
+    if (!web3formsResponse.ok) {
+      console.error("[Fraud Report API] Web3Forms returned error:", {
+        status: web3formsResponse.status,
+        statusText: web3formsResponse.statusText,
         response: web3formsResult,
-        caseEmail: contactEmail,
+        filesSubmitted: files.length,
       })
 
-      const errorMessage = web3formsResult.message || "Your submission could not be processed. Please try again."
+      // Specific error messages based on status
+      let userMessage = "Unable to process your submission. Please try again later."
+      let statusCode = 503
+
+      if (web3formsResponse.status === 400) {
+        userMessage = "Invalid submission data. Please check your information and try again."
+        statusCode = 400
+      } else if (web3formsResponse.status === 401 || web3formsResponse.status === 403) {
+        userMessage = "Server authentication failed. Please contact support."
+        statusCode = 503
+      } else if (web3formsResponse.status === 413) {
+        userMessage = "Files are too large. Please reduce file sizes and try again."
+        statusCode = 413
+      } else if (web3formsResponse.status === 429) {
+        userMessage = "Too many submissions. Please wait a moment and try again."
+        statusCode = 429
+      } else if (web3formsResponse.status >= 500) {
+        userMessage = "The submission service is temporarily unavailable. Please try again in a few moments."
+        statusCode = 503
+      }
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: userMessage,
+          code: "SUBMISSION_SERVICE_ERROR",
+        },
+        { status: statusCode }
+      )
+    }
+
+    // Check if web3forms reported success
+    if (!web3formsResult.success) {
+      console.error("[Fraud Report API] Web3Forms submission rejected:", {
+        response: web3formsResult,
+        caseEmail: contactEmail,
+        filesSubmitted: files.length,
+      })
+
+      const errorMessage =
+        web3formsResult.message || "Your submission could not be processed. Please try again."
       return NextResponse.json(
         {
           success: false,
@@ -350,15 +375,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Successful submission
     const caseId = `CSRU-${Date.now().toString(36).toUpperCase()}`
-    console.log(`[Fraud Report API] Successful submission - Case: ${caseId}, Email: ${contactEmail}`)
+    console.log(`[Fraud Report API] Successful submission with files:`, {
+      caseId,
+      email: contactEmail,
+      filesSubmitted: files.length,
+      totalFileSize: totalFileSize,
+      totalFileSizeMB: (totalFileSize / (1024 * 1024)).toFixed(2),
+    })
 
     return NextResponse.json(
       {
         success: true,
         caseId,
         message: "Fraud report received successfully. We will review your case shortly.",
-        filesProcessed: filesCount,
+        filesProcessed: files.length,
       },
       { status: 201 }
     )
