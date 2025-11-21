@@ -187,8 +187,13 @@ export function FraudReportingWizard() {
       }
     } catch (error) {
       console.error("Submission error:", error)
-      const errorMsg = error instanceof Error ? error.message : "Network error"
-      setSubmissionError(`${errorMsg}. Please check your connection and try again.`)
+      let errorMsg = "Network error"
+
+      if (error instanceof Error) {
+        errorMsg = error.message
+      }
+
+      setSubmissionError(`Submission failed: ${errorMsg}`)
       setIsSubmitting(false)
     }
   }
