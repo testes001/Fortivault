@@ -12,74 +12,6 @@ const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit"
 
 export const runtime = "nodejs"
 
-async function extractFormData(request: NextRequest) {
-  const contentType = request.headers.get("content-type") || ""
-
-  if (!contentType.includes("multipart/form-data")) {
-    return {
-      error: "Invalid content type. Expected multipart/form-data.",
-      data: null,
-    }
-  }
-
-  try {
-    const formData = await request.formData()
-
-    const fullName = (formData.get("fullName") as string) || ""
-    const contactEmail = (formData.get("contactEmail") as string) || ""
-    const contactPhone = (formData.get("contactPhone") as string) || ""
-    const scamType = (formData.get("scamType") as string) || ""
-    const amount = (formData.get("amount") as string) || ""
-    const currency = (formData.get("currency") as string) || ""
-    const timeline = (formData.get("timeline") as string) || ""
-    const description = (formData.get("description") as string) || ""
-
-    let transactionHashes: string[] = []
-    let bankReferences: string[] = []
-
-    try {
-      const txHashesStr = (formData.get("transactionHashes") as string) || ""
-      const bankRefsStr = (formData.get("bankReferences") as string) || ""
-      transactionHashes = txHashesStr ? JSON.parse(txHashesStr) : []
-      bankReferences = bankRefsStr ? JSON.parse(bankRefsStr) : []
-    } catch {
-      transactionHashes = []
-      bankReferences = []
-    }
-
-    const uploadedFiles: { name: string; size: number }[] = []
-    const files = formData.getAll("files")
-    for (const file of files) {
-      if (file instanceof File) {
-        uploadedFiles.push({ name: file.name, size: file.size })
-      }
-    }
-
-    return {
-      error: null,
-      data: {
-        fullName,
-        contactEmail,
-        contactPhone,
-        scamType,
-        amount,
-        currency,
-        timeline,
-        description,
-        transactionHashes,
-        bankReferences,
-        uploadedFiles,
-      },
-    }
-  } catch (error) {
-    console.error("[Fraud Report API] Error reading form data:", error)
-    return {
-      error: "Failed to process form data. Please try again.",
-      data: null,
-    }
-  }
-}
-
 export async function POST(request: NextRequest) {
   const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
 
@@ -99,28 +31,37 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { error: extractError, data } = await extractFormData(request)
+    const contentType = request.headers.get("content-type") || ""
 
-    if (extractError || !data) {
+    if (!contentType.includes("application/json")) {
       return NextResponse.json(
-        { success: false, message: extractError || "Invalid request data" },
+        { success: false, message: "Invalid content type. Expected application/json." },
         { status: 400 }
       )
     }
 
-    const {
-      fullName,
-      contactEmail,
-      contactPhone,
-      scamType,
-      amount,
-      currency,
-      timeline,
-      description,
-      transactionHashes,
-      bankReferences,
-      uploadedFiles,
-    } = data
+    let body: any
+    try {
+      body = await request.json()
+    } catch (error) {
+      console.error("[Fraud Report API] Error parsing JSON:", error)
+      return NextResponse.json(
+        { success: false, message: "Invalid JSON payload." },
+        { status: 400 }
+      )
+    }
+
+    const fullName = body.fullName || ""
+    const contactEmail = body.contactEmail || ""
+    const contactPhone = body.contactPhone || ""
+    const scamType = body.scamType || ""
+    const amount = body.amount || ""
+    const currency = body.currency || ""
+    const timeline = body.timeline || ""
+    const description = body.description || ""
+    const transactionHashes = Array.isArray(body.transactionHashes) ? body.transactionHashes : []
+    const bankReferences = Array.isArray(body.bankReferences) ? body.bankReferences : []
+    const filesCount = body.filesCount || 0
 
     console.log("[Fraud Report API] Received submission:", {
       fullName,
@@ -128,6 +69,7 @@ export async function POST(request: NextRequest) {
       scamType,
       amount,
       currency,
+      filesCount,
     })
 
     const validation = validateFraudReport({
@@ -163,8 +105,7 @@ export async function POST(request: NextRequest) {
     web3formsData.append("description", description)
     web3formsData.append("transactionHashes", JSON.stringify(transactionHashes))
     web3formsData.append("bankReferences", JSON.stringify(bankReferences))
-    web3formsData.append("filesCount", uploadedFiles.length.toString())
-    web3formsData.append("fileNames", uploadedFiles.map((f) => f.name).join(", "))
+    web3formsData.append("filesCount", filesCount.toString())
     web3formsData.append("clientIp", clientIp)
     web3formsData.append("userAgent", request.headers.get("user-agent") || "unknown")
     web3formsData.append("submittedAt", new Date().toISOString())
@@ -218,7 +159,7 @@ export async function POST(request: NextRequest) {
         success: true,
         caseId,
         message: "Fraud report received successfully. We will review your case shortly.",
-        filesProcessed: uploadedFiles.length,
+        filesProcessed: filesCount,
       },
       { status: 201 }
     )
