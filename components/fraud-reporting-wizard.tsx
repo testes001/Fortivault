@@ -170,13 +170,7 @@ export function FraudReportingWizard() {
       const status = response.status
 
       try {
-        const blob = await response.blob()
-        const text = await blob.text()
-        if (text) {
-          result = JSON.parse(text)
-        } else {
-          result = { success: status === 201, message: "Empty response" }
-        }
+        result = await response.json()
       } catch (parseError) {
         console.error("Response parsing error:", parseError)
         result = {
