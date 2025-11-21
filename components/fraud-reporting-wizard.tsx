@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, FormEvent } from "react"
+import { useState, FormEvent, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { ScamTypeStep } from "@/components/wizard-steps/scam-type-step"
@@ -60,6 +60,27 @@ export function FraudReportingWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submissionError, setSubmissionError] = useState("")
   const [caseId, setCaseId] = useState("")
+  const [showStepError, setShowStepError] = useState(false)
+
+  // Warn user before leaving with incomplete data
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Only show warning if form has data but is incomplete (not submitted and not on step 0)
+      const hasData = Object.values(data).some((v) => {
+        if (Array.isArray(v)) return v.length > 0
+        return v !== ""
+      })
+
+      if (hasData && !isSubmitted && currentStep !== 0) {
+        e.preventDefault()
+        e.returnValue = ""
+        return ""
+      }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [data, isSubmitted, currentStep])
 
   const validateForm = () => {
     if (!data.fullName) return "Full Name is required."
@@ -78,15 +99,30 @@ export function FraudReportingWizard() {
   }
 
   const nextStep = () => {
+    if (!canProceed()) {
+      setShowStepError(true)
+      return
+    }
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
+      setShowStepError(false)
     }
   }
 
   const prevStep = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
+      setShowStepError(false)
     }
+  }
+
+  const resetWizard = () => {
+    setData(initialData)
+    setCurrentStep(0)
+    setIsSubmitted(false)
+    setSubmissionError("")
+    setCaseId("")
+    setShowStepError(false)
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -139,13 +175,14 @@ export function FraudReportingWizard() {
         const errorMessage =
           Array.isArray(result.errors) && result.errors.length > 0
             ? result.errors[0]
-            : result.error || "Submission failed. Please try again later."
+            : result.error || "Submission failed. Please check your information and try again."
         setSubmissionError(errorMessage)
         setIsSubmitting(false)
       }
     } catch (error) {
       console.error("Submission error:", error)
-      setSubmissionError("Network error. Please check your connection and try again.")
+      const errorMsg = error instanceof Error ? error.message : "Network error"
+      setSubmissionError(`${errorMsg}. Please check your connection and try again.`)
       setIsSubmitting(false)
     }
   }
@@ -170,7 +207,7 @@ export function FraudReportingWizard() {
   }
 
   if (isSubmitted) {
-    return <SuccessStep caseId={caseId} userEmail={data.contactEmail} />
+    return <SuccessStep caseId={caseId} userEmail={data.contactEmail} onSubmitAnother={resetWizard} />
   }
 
   const progress = ((currentStep + 1) / steps.length) * 100
@@ -195,7 +232,18 @@ export function FraudReportingWizard() {
           {submissionError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{submissionError}</AlertDescription>
+              <div className="flex items-center justify-between gap-4 w-full">
+                <AlertDescription>{submissionError}</AlertDescription>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSubmissionError("")}
+                  className="flex-shrink-0 gap-2"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Retry
+                </Button>
+              </div>
             </Alert>
           )}
 
@@ -207,8 +255,8 @@ export function FraudReportingWizard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              {currentStep === 0 && <ScamTypeStep data={data} updateData={updateData} />}
-              {currentStep === 1 && <PersonalDetailsStep data={data} updateData={updateData} />}
+              {currentStep === 0 && <ScamTypeStep data={data} updateData={updateData} showError={showStepError} />}
+              {currentStep === 1 && <PersonalDetailsStep data={data} updateData={updateData} showError={showStepError} />}
               {currentStep === 2 && <DetailsStep data={data} updateData={updateData} />}
               {currentStep === 3 && <TransactionStep data={data} updateData={updateData} />}
               {currentStep === 4 && <EvidenceStep data={data} updateData={updateData} />}

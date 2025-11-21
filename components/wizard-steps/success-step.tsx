@@ -1,6 +1,8 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import { CheckCircle, Mail } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
@@ -8,6 +10,7 @@ import { useState, useEffect } from "react"
 interface SuccessStepProps {
   caseId: string
   userEmail: string
+  onSubmitAnother?: () => void
 }
 
 export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
@@ -60,6 +63,16 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
             <div className="space-y-4">
               <h2 className="text-2xl font-bold">Processing Your Report</h2>
               <p className="text-muted-foreground">Please wait while we securely process your fraud report...</p>
+
+              <div className="space-y-2 mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Upload Progress</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {Math.round((completedSteps.length / 4) * 100)}%
+                  </span>
+                </div>
+                <Progress value={(completedSteps.length / 4) * 100} className="w-full" />
+              </div>
 
               <div className="space-y-3 mt-6">
                 {progressMessages.map((message, index) => (
@@ -151,6 +164,25 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
               <li>• You'll receive updates via email</li>
               <li>• Additional information may be requested as needed</li>
             </ul>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              className="flex-1"
+              onClick={onSubmitAnother}
+              aria-label="Submit another fraud case"
+            >
+              Submit Another Case
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1"
+              asChild
+            >
+              <a href="/" aria-label="Return to home page">
+                Return Home
+              </a>
+            </Button>
           </div>
         </CardContent>
       </Card>

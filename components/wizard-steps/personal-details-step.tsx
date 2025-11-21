@@ -3,15 +3,18 @@
 import { useState } from "react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 import { validateEmail, validatePhone } from "@/lib/utils/validation"
 import type { WizardData } from "@/components/fraud-reporting-wizard"
 
 interface PersonalDetailsStepProps {
   data: WizardData
   updateData: (updates: Partial<WizardData>) => void
+  showError?: boolean
 }
 
-export function PersonalDetailsStep({ data, updateData }: PersonalDetailsStepProps) {
+export function PersonalDetailsStep({ data, updateData, showError = false }: PersonalDetailsStepProps) {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const handleNameChange = (value: string) => {
@@ -37,6 +40,14 @@ export function PersonalDetailsStep({ data, updateData }: PersonalDetailsStepPro
 
   return (
     <div className="space-y-6">
+      {showError && (
+        <Alert variant="destructive" role="alert">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Please fill in all required fields (Name and Email)
+          </AlertDescription>
+        </Alert>
+      )}
       <div>
         <h3 className="text-lg font-semibold mb-4" id="personal-details-heading">
           Your Details

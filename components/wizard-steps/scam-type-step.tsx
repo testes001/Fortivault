@@ -1,12 +1,15 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Bitcoin, CreditCard, AlertTriangle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Bitcoin, CreditCard, AlertTriangle, AlertCircle } from "lucide-react"
 import type { WizardData } from "@/components/fraud-reporting-wizard"
 
 interface ScamTypeStepProps {
   data: WizardData
   updateData: (updates: Partial<WizardData>) => void
+  showError?: boolean
 }
 
 const scamTypes = [
@@ -30,9 +33,17 @@ const scamTypes = [
   },
 ]
 
-export function ScamTypeStep({ data, updateData }: ScamTypeStepProps) {
+export function ScamTypeStep({ data, updateData, showError = false }: ScamTypeStepProps) {
   return (
     <div className="space-y-4">
+      {showError && (
+        <Alert variant="destructive" role="alert">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Please select a scam type to continue
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4" role="radiogroup" aria-labelledby="scam-type-heading">
         {scamTypes.map((type) => {
           const isSelected = data.scamType === type.id
