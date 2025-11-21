@@ -182,10 +182,10 @@ export function TransactionStep({ data, updateData }: TransactionStepProps) {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-4" id="bank-heading">
-          Bank Transfer Information
+          Bank Transfer Information <span className="text-gray-400 text-sm">(Optional)</span>
         </h3>
         <p className="text-muted-foreground mb-4">
-          Please provide any bank transfer references, wire transfer numbers, or payment confirmation numbers.
+          If available, provide any bank transfer references, wire transfer numbers, or payment confirmation numbers.
         </p>
       </div>
 
