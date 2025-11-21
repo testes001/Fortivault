@@ -12,7 +12,7 @@ interface PersonalDetailsStepProps {
   showError?: boolean
 }
 
-export function PersonalDetailsStep({ data, updateData }: PersonalDetailsStepProps) {
+export function PersonalDetailsStep({ data, updateData, showError = false }: PersonalDetailsStepProps) {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const handleNameChange = (value: string) => {
