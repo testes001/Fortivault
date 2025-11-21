@@ -151,10 +151,11 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
         <Label htmlFor="timeline" className="font-medium">
           When did this occur? <span className="text-red-500" aria-label="required">*</span>
         </Label>
-        <Select value={data.timeline} onValueChange={(value) => updateData({ timeline: value })}>
+        <Select value={data.timeline} onValueChange={handleTimelineChange}>
           <SelectTrigger
             id="timeline"
             aria-labelledby="timeline"
+            aria-describedby={errors.timeline ? "timeline-error" : undefined}
             aria-required="true"
             className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
           >
@@ -168,6 +169,11 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
             ))}
           </SelectContent>
         </Select>
+        {errors.timeline && (
+          <p id="timeline-error" className="text-sm text-red-500" role="alert">
+            {errors.timeline}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
