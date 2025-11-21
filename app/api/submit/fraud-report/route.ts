@@ -60,6 +60,17 @@ export async function POST(request: NextRequest) {
     const timeline = (formData.get("timeline") as string) || ""
     const description = (formData.get("description") as string) || ""
 
+    console.log("[Fraud Report API] Received form data:", {
+      fullName,
+      contactEmail,
+      contactPhone,
+      scamType,
+      amount,
+      currency,
+      timeline,
+      description: description.substring(0, 50) + "...",
+    })
+
     let transactionHashes: string[] = []
     let bankReferences: string[] = []
 
