@@ -169,11 +169,28 @@ export function FraudReportingWizard() {
         // Browser automatically sets Content-Type: multipart/form-data
       })
 
-      const result = await response.json()
+      let result: any
+      const status = response.status
 
-      if (!response.ok) {
+      try {
+        const blob = await response.blob()
+        const text = await blob.text()
+        if (text) {
+          result = JSON.parse(text)
+        } else {
+          result = { success: status === 201, message: "Empty response" }
+        }
+      } catch (parseError) {
+        console.error("Response parsing error:", parseError)
+        result = {
+          success: false,
+          message: `Failed to parse server response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`,
+        }
+      }
+
+      if (status >= 400) {
         const errorMessage =
-          result.message || result.errors?.[0] || `Server error: ${response.status}`
+          result.message || result.errors?.[0] || `Server error: ${status}`
         throw new Error(errorMessage)
       }
 
