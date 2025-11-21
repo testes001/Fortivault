@@ -26,7 +26,7 @@ const isValidBankReference = (reference: string): boolean => {
   return cleaned.length >= 5 && /^[a-zA-Z0-9\-\/\s]+$/.test(cleaned)
 }
 
-export function TransactionStep({ data, updateData }: TransactionStepProps) {
+export function TransactionStep({ data, updateData, showError = false }: TransactionStepProps) {
   const [newHash, setNewHash] = useState("")
   const [newReference, setNewReference] = useState("")
   const [errors, setErrors] = useState<Record<string, string>>({})
