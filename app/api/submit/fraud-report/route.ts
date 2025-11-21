@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { validateFraudReport } from "@/lib/utils/validation"
 import { validateApiKey } from "@/lib/config/api-key-validator"
+import { handleWeb3FormsError } from "@/lib/config/web3forms-error-handler"
 import { rateLimiter } from "@/lib/security/rate-limiter"
 
 const RATE_LIMIT_CONFIG = {
