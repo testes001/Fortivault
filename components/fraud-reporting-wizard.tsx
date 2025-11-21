@@ -138,34 +138,32 @@ export function FraudReportingWizard() {
     setIsSubmitting(true)
 
     try {
-      // Create JSON payload (files will be tracked but not sent in initial request)
-      const fileMetadata = data.evidenceFiles.map((file) => ({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      }))
+      // Create FormData payload with file uploads
+      const formData = new FormData()
 
-      const payload = {
-        fullName: data.fullName,
-        contactEmail: data.contactEmail,
-        contactPhone: data.contactPhone,
-        scamType: data.scamType,
-        amount: data.amount,
-        currency: data.currency,
-        timeline: data.timeline,
-        description: data.description,
-        transactionHashes: data.transactionHashes,
-        bankReferences: data.bankReferences,
-        filesMetadata: fileMetadata,
-        filesCount: data.evidenceFiles.length,
-      }
+      // Add form fields
+      formData.append("fullName", data.fullName)
+      formData.append("contactEmail", data.contactEmail)
+      formData.append("contactPhone", data.contactPhone)
+      formData.append("scamType", data.scamType)
+      formData.append("amount", data.amount)
+      formData.append("currency", data.currency)
+      formData.append("timeline", data.timeline)
+      formData.append("description", data.description)
+      formData.append("transactionHashes", JSON.stringify(data.transactionHashes))
+      formData.append("bankReferences", JSON.stringify(data.bankReferences))
+
+      // Append actual files
+      data.evidenceFiles.forEach((file, index) => {
+        formData.append(`evidenceFile_${index}`, file)
+      })
+
+      formData.append("filesCount", data.evidenceFiles.length.toString())
 
       const response = await fetch("/api/submit/fraud-report", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        body: formData,
+        // Browser automatically sets Content-Type: multipart/form-data
       })
 
       const result = await response.json()
