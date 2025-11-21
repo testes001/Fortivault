@@ -167,14 +167,24 @@ export function FraudReportingWizard() {
       })
 
       let result: any
-      try {
-        const text = await response.text()
-        if (!text) {
-          throw new Error("Empty response from server")
+      const contentType = response.headers.get("content-type")
+
+      if (contentType?.includes("application/json")) {
+        try {
+          result = await response.json()
+        } catch (parseError) {
+          // If response body was already consumed, try creating a fresh error response
+          if (parseError instanceof Error && parseError.message.includes("already read")) {
+            result = {
+              success: false,
+              message: "Server response could not be read. Please try again.",
+            }
+          } else {
+            throw new Error(`Failed to parse response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`)
+          }
         }
-        result = JSON.parse(text)
-      } catch (parseError) {
-        throw new Error(`Failed to parse response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`)
+      } else {
+        result = { success: false, message: "Invalid response from server" }
       }
 
       if (!response.ok) {
