@@ -165,6 +165,25 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
               <li>• Additional information may be requested as needed</li>
             </ul>
           </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              className="flex-1"
+              onClick={onSubmitAnother}
+              aria-label="Submit another fraud case"
+            >
+              Submit Another Case
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1"
+              asChild
+            >
+              <a href="/" aria-label="Return to home page">
+                Return Home
+              </a>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </motion.div>
