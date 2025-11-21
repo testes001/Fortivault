@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, X } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 import type { WizardData } from "@/components/fraud-reporting-wizard"
 
 interface TransactionStepProps {
@@ -13,38 +15,83 @@ interface TransactionStepProps {
   updateData: (updates: Partial<WizardData>) => void
 }
 
+const isValidTransactionHash = (hash: string): boolean => {
+  const cleaned = hash.trim()
+  return /^[a-fA-F0-9]{64}$/.test(cleaned)
+}
+
+const isValidBankReference = (reference: string): boolean => {
+  const cleaned = reference.trim()
+  return cleaned.length >= 5 && /^[a-zA-Z0-9\-\/\s]+$/.test(cleaned)
+}
+
 export function TransactionStep({ data, updateData }: TransactionStepProps) {
   const [newHash, setNewHash] = useState("")
   const [newReference, setNewReference] = useState("")
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const addTransactionHash = () => {
-    if (newHash.trim()) {
-      updateData({
-        transactionHashes: [...data.transactionHashes, newHash.trim()],
-      })
-      setNewHash("")
+    const cleaned = newHash.trim()
+
+    if (!cleaned) {
+      setErrors({ hash: "Transaction hash cannot be empty" })
+      return
     }
+
+    if (!isValidTransactionHash(cleaned)) {
+      setErrors({ hash: "Invalid hash format. Expected 64 hexadecimal characters" })
+      return
+    }
+
+    if (data.transactionHashes.includes(cleaned)) {
+      setErrors({ hash: "This transaction hash has already been added" })
+      return
+    }
+
+    updateData({
+      transactionHashes: [...data.transactionHashes, cleaned],
+    })
+    setNewHash("")
+    setErrors({})
   }
 
   const removeTransactionHash = (index: number) => {
     updateData({
       transactionHashes: data.transactionHashes.filter((_, i) => i !== index),
     })
+    setErrors({})
   }
 
   const addBankReference = () => {
-    if (newReference.trim()) {
-      updateData({
-        bankReferences: [...data.bankReferences, newReference.trim()],
-      })
-      setNewReference("")
+    const cleaned = newReference.trim()
+
+    if (!cleaned) {
+      setErrors({ reference: "Bank reference cannot be empty" })
+      return
     }
+
+    if (!isValidBankReference(cleaned)) {
+      setErrors({ reference: "Invalid format. Use letters, numbers, hyphens, and spaces (minimum 5 characters)" })
+      return
+    }
+
+    if (data.bankReferences.includes(cleaned)) {
+      setErrors({ reference: "This bank reference has already been added" })
+      return
+    }
+
+    updateData({
+      bankReferences: [...data.bankReferences, cleaned],
+    })
+    setNewReference("")
+    setErrors({})
   }
 
   const removeBankReference = (index: number) => {
     updateData({
       bankReferences: data.bankReferences.filter((_, i) => i !== index),
     })
+    setErrors({})
   }
 
   if (data.scamType === "crypto") {
