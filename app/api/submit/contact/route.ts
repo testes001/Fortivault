@@ -12,14 +12,43 @@ const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit"
 
 export const runtime = "nodejs"
 
+/**
+ * Validates that critical environment variables are set
+ * Used for redundant checks at request time
+ */
+function validateConfiguration(): { valid: boolean; error?: string } {
+  // Redundant check #1: Direct variable check
+  if (!WEB3FORMS_API_KEY) {
+    return {
+      valid: false,
+      error: "WEB3FORMS_API_KEY is not configured. Contact support if this persists.",
+    }
+  }
+
+  // Redundant check #2: Verify it's not empty after trimming
+  if (!WEB3FORMS_API_KEY.trim()) {
+    return {
+      valid: false,
+      error: "WEB3FORMS_API_KEY is empty. Please provide a valid API key.",
+    }
+  }
+
+  return { valid: true }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // Validate API key is configured
-    if (!WEB3FORMS_API_KEY) {
-      console.error("[Contact API] Missing WEB3FORMS_API_KEY environment variable")
+    // Redundant configuration check
+    const configCheck = validateConfiguration()
+    if (!configCheck.valid) {
+      console.error("[Contact API] Configuration validation failed:", configCheck.error)
       return NextResponse.json(
-        { success: false, message: "Server configuration error. Please try again later." },
-        { status: 500 }
+        {
+          success: false,
+          message: configCheck.error || "Server is not properly configured. Please try again later.",
+          code: "CONFIG_ERROR",
+        },
+        { status: 503 }
       )
     }
 
