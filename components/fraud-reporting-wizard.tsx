@@ -106,6 +106,7 @@ export function FraudReportingWizard() {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
       setShowStepError(false)
+      setSubmissionError("")
     }
   }
 
@@ -113,6 +114,7 @@ export function FraudReportingWizard() {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
       setShowStepError(false)
+      setSubmissionError("")
     }
   }
 
