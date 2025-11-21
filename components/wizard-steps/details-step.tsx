@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -33,24 +34,69 @@ const timeframes = [
 ]
 
 export function DetailsStep({ data, updateData }: DetailsStepProps) {
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const handleAmountChange = (value: string) => {
+    const num = parseFloat(value)
+    if (value === "" || (num >= 0 && !isNaN(num))) {
+      updateData({ amount: value })
+      if (errors.amount) {
+        setErrors({ ...errors, amount: "" })
+      }
+    }
+  }
+
+  const handleDescriptionChange = (value: string) => {
+    updateData({ description: value })
+    if (errors.description && value.trim().length > 0) {
+      setErrors({ ...errors, description: "" })
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="amount">Amount Lost *</Label>
+          <Label htmlFor="amount" className="font-medium">
+            Amount Lost <span className="text-red-500" aria-label="required">*</span>
+          </Label>
           <Input
             id="amount"
             type="number"
-            placeholder="Enter amount"
+            inputMode="decimal"
+            placeholder="0.00"
+            min="0"
+            step="0.01"
             value={data.amount}
-            onChange={(e) => updateData({ amount: e.target.value })}
+            onChange={(e) => handleAmountChange(e.target.value)}
+            aria-labelledby="amount"
+            aria-describedby={errors.amount ? "amount-error" : "amount-hint"}
+            aria-required="true"
+            className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
           />
+          {errors.amount && (
+            <p id="amount-error" className="text-sm text-red-500" role="alert">
+              {errors.amount}
+            </p>
+          )}
+          {!errors.amount && (
+            <p id="amount-hint" className="text-xs text-muted-foreground">
+              Enter the amount in numbers only
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="currency">Currency *</Label>
+          <Label htmlFor="currency" className="font-medium">
+            Currency <span className="text-red-500" aria-label="required">*</span>
+          </Label>
           <Select value={data.currency} onValueChange={(value) => updateData({ currency: value })}>
-            <SelectTrigger>
+            <SelectTrigger
+              id="currency"
+              aria-labelledby="currency"
+              aria-required="true"
+              className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+            >
               <SelectValue placeholder="Select currency" />
             </SelectTrigger>
             <SelectContent>
@@ -65,9 +111,16 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="timeline">When did this occur? *</Label>
+        <Label htmlFor="timeline" className="font-medium">
+          When did this occur? <span className="text-red-500" aria-label="required">*</span>
+        </Label>
         <Select value={data.timeline} onValueChange={(value) => updateData({ timeline: value })}>
-          <SelectTrigger>
+          <SelectTrigger
+            id="timeline"
+            aria-labelledby="timeline"
+            aria-required="true"
+            className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+          >
             <SelectValue placeholder="Select timeframe" />
           </SelectTrigger>
           <SelectContent>
@@ -81,17 +134,29 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Detailed Description *</Label>
+        <Label htmlFor="description" className="font-medium">
+          Detailed Description <span className="text-red-500" aria-label="required">*</span>
+        </Label>
         <Textarea
           id="description"
           placeholder="Please provide a detailed description of what happened, including how you were contacted, what you were promised, and how the fraud occurred..."
-          className="min-h-[120px]"
+          className="min-h-[120px] focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
           value={data.description}
-          onChange={(e) => updateData({ description: e.target.value })}
+          onChange={(e) => handleDescriptionChange(e.target.value)}
+          aria-labelledby="description"
+          aria-describedby={errors.description ? "description-error" : "description-hint"}
+          aria-required="true"
         />
-        <p className="text-sm text-muted-foreground">
-          Include as much detail as possible. This helps our team understand your case better.
-        </p>
+        {errors.description && (
+          <p id="description-error" className="text-sm text-red-500" role="alert">
+            {errors.description}
+          </p>
+        )}
+        {!errors.description && (
+          <p id="description-hint" className="text-sm text-muted-foreground">
+            Include as much detail as possible. This helps our team understand your case better.
+          </p>
+        )}
       </div>
     </div>
   )

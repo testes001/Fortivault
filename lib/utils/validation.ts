@@ -9,8 +9,25 @@ export function validateAmount(amount: string): boolean {
 }
 
 export function validatePhone(phone: string): boolean {
+  // Allow optional phone
+  if (!phone || phone.trim().length === 0) return true
   const phoneRegex = /^[\d+\-\s()]+$/
   return phoneRegex.test(phone) && phone.replace(/\D/g, "").length >= 10
+}
+
+export function validateFileSize(file: File, maxSizeMB: number = 10): boolean {
+  const maxSizeBytes = maxSizeMB * 1024 * 1024
+  return file.size <= maxSizeBytes
+}
+
+export function validateFileType(file: File, allowedTypes: string[]): boolean {
+  return allowedTypes.includes(file.type) || allowedTypes.some((type) => type.endsWith("/*") && file.type.startsWith(type.split("/")[0]))
+}
+
+export function getFileSizeDisplay(bytes: number): string {
+  if (bytes < 1024) return bytes + " B"
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB"
+  return (bytes / (1024 * 1024)).toFixed(2) + " MB"
 }
 
 export function validateFraudReport(data: {

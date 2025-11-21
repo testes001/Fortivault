@@ -107,7 +107,7 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="text-center">
+      <Card className="text-center" role="region" aria-labelledby="success-title">
         <CardContent className="p-8 space-y-6">
           <motion.div
             initial={{ scale: 0 }}
@@ -118,7 +118,9 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
           </motion.div>
 
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-accent">Report Submitted Successfully!</h2>
+            <h2 id="success-title" className="text-2xl font-bold text-accent">
+              Report Submitted Successfully!
+            </h2>
             <p className="text-muted-foreground text-pretty">
               Your fraud report has been securely received and is now in our system for processing.
             </p>
