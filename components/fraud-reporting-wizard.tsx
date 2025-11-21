@@ -60,6 +60,27 @@ export function FraudReportingWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submissionError, setSubmissionError] = useState("")
   const [caseId, setCaseId] = useState("")
+  const [showStepError, setShowStepError] = useState(false)
+
+  // Warn user before leaving with incomplete data
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Only show warning if form has data but is incomplete (not submitted and not on step 0)
+      const hasData = Object.values(data).some((v) => {
+        if (Array.isArray(v)) return v.length > 0
+        return v !== ""
+      })
+
+      if (hasData && !isSubmitted && currentStep !== 0) {
+        e.preventDefault()
+        e.returnValue = ""
+        return ""
+      }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [data, isSubmitted, currentStep])
 
   const validateForm = () => {
     if (!data.fullName) return "Full Name is required."
