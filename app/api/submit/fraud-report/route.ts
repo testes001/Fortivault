@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!validation.valid) {
+      console.error("[Fraud Report API] Validation failed:", validation.errors)
       return NextResponse.json(
         { success: false, errors: validation.errors, message: validation.errors[0] },
         { status: 400 }
