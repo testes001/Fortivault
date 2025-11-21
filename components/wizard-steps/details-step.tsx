@@ -121,10 +121,11 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
           <Label htmlFor="currency" className="font-medium">
             Currency <span className="text-red-500" aria-label="required">*</span>
           </Label>
-          <Select value={data.currency} onValueChange={(value) => updateData({ currency: value })}>
+          <Select value={data.currency} onValueChange={handleCurrencyChange}>
             <SelectTrigger
               id="currency"
               aria-labelledby="currency"
+              aria-describedby={errors.currency ? "currency-error" : undefined}
               aria-required="true"
               className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
             >
@@ -138,6 +139,11 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
               ))}
             </SelectContent>
           </Select>
+          {errors.currency && (
+            <p id="currency-error" className="text-sm text-red-500" role="alert">
+              {errors.currency}
+            </p>
+          )}
         </div>
       </div>
 
