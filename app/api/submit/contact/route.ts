@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { validateContactForm } from "@/lib/utils/validation"
+import { validateApiKey } from "@/lib/config/api-key-validator"
 import { rateLimiter } from "@/lib/security/rate-limiter"
 
 const RATE_LIMIT_CONFIG = {
@@ -12,34 +13,10 @@ const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit"
 
 export const runtime = "nodejs"
 
-/**
- * Validates that critical environment variables are set
- * Used for redundant checks at request time
- */
-function validateConfiguration(): { valid: boolean; error?: string } {
-  // Redundant check #1: Direct variable check
-  if (!WEB3FORMS_API_KEY) {
-    return {
-      valid: false,
-      error: "WEB3FORMS_API_KEY is not configured. Contact support if this persists.",
-    }
-  }
-
-  // Redundant check #2: Verify it's not empty after trimming
-  if (!WEB3FORMS_API_KEY.trim()) {
-    return {
-      valid: false,
-      error: "WEB3FORMS_API_KEY is empty. Please provide a valid API key.",
-    }
-  }
-
-  return { valid: true }
-}
 
 export async function POST(request: NextRequest) {
   try {
-    // Redundant configuration check
-    const configCheck = validateConfiguration()
+    const configCheck = validateApiKey(WEB3FORMS_API_KEY, "WEB3FORMS_API_KEY")
     if (!configCheck.valid) {
       console.error("[Contact API] Configuration validation failed:", configCheck.error)
       return NextResponse.json(
