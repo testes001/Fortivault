@@ -28,15 +28,19 @@ export function ConfirmationStep({ data, updateData }: ConfirmationStepProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Review Your Submission</h3>
+        <h3 className="text-lg font-semibold mb-4" id="confirmation-heading">
+          Review Your Submission
+        </h3>
         <p className="text-muted-foreground mb-6">
           Please review all the information you have provided before submitting your report.
         </p>
       </div>
 
-      <Card>
+      <Card role="region" aria-labelledby="case-summary-title">
         <CardHeader>
-          <CardTitle className="text-lg">Case Summary</CardTitle>
+          <CardTitle className="text-lg" id="case-summary-title">
+            Case Summary
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
