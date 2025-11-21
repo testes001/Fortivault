@@ -40,23 +40,18 @@ export default function ContactPage() {
     setIsSubmitting(true)
 
     try {
-      const formData = new FormData()
-
-      // Web3Forms requires access_key
-      formData.append("access_key", "8b7b966f-b99c-44bd-ae50-fee2a626402f")
-      formData.append("form_name", "contact")
-
-      formData.append("name", name)
-      formData.append("email", email)
-      formData.append("subject", subject)
-      formData.append("message", message)
-      if (phone) {
-        formData.append("phone", phone)
-      }
-
-      const response = await fetch("https://api.web3forms.com/submit", {
+      const response = await fetch("/api/submit/contact", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          subject,
+          message,
+          phone,
+        }),
       })
 
       const result = await response.json()
