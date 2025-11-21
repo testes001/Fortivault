@@ -12,14 +12,43 @@ const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit"
 
 export const runtime = "nodejs"
 
+/**
+ * Validates that critical environment variables are set
+ * Used for redundant checks at request time
+ */
+function validateConfiguration(): { valid: boolean; error?: string } {
+  // Redundant check #1: Direct variable check
+  if (!WEB3FORMS_API_KEY) {
+    return {
+      valid: false,
+      error: "WEB3FORMS_API_KEY is not configured. Contact support if this persists.",
+    }
+  }
+
+  // Redundant check #2: Verify it's not empty after trimming
+  if (!WEB3FORMS_API_KEY.trim()) {
+    return {
+      valid: false,
+      error: "WEB3FORMS_API_KEY is empty. Please provide a valid API key.",
+    }
+  }
+
+  return { valid: true }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // Validate API key is configured
-    if (!WEB3FORMS_API_KEY) {
-      console.error("[Contact API] Missing WEB3FORMS_API_KEY environment variable")
+    // Redundant configuration check
+    const configCheck = validateConfiguration()
+    if (!configCheck.valid) {
+      console.error("[Contact API] Configuration validation failed:", configCheck.error)
       return NextResponse.json(
-        { success: false, message: "Server configuration error. Please try again later." },
-        { status: 500 }
+        {
+          success: false,
+          message: configCheck.error || "Server is not properly configured. Please try again later.",
+          code: "CONFIG_ERROR",
+        },
+        { status: 503 }
       )
     }
 
@@ -51,8 +80,22 @@ export async function POST(request: NextRequest) {
     })
 
     if (!validation.valid) {
+      console.error("[Contact API] Validation failed:", {
+        errors: validation.errors,
+        providedFields: {
+          name: name ? "[provided]" : "[missing]",
+          email: email ? "[provided]" : "[missing]",
+          subject: subject ? "[provided]" : "[missing]",
+          message: message ? "[provided]" : "[missing]",
+        },
+      })
       return NextResponse.json(
-        { success: false, errors: validation.errors },
+        {
+          success: false,
+          errors: validation.errors,
+          message: validation.errors[0] || "Validation failed",
+          code: "VALIDATION_ERROR",
+        },
         { status: 400 }
       )
     }
@@ -73,17 +116,89 @@ export async function POST(request: NextRequest) {
     web3formsData.append("submittedAt", new Date().toISOString())
 
     // Submit to Web3Forms
-    const web3formsResponse = await fetch(WEB3FORMS_ENDPOINT, {
-      method: "POST",
-      body: web3formsData,
-    })
+    let web3formsResponse: Response
+    try {
+      web3formsResponse = await fetch(WEB3FORMS_ENDPOINT, {
+        method: "POST",
+        body: web3formsData,
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      })
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Unknown error"
+      console.error("[Contact API] Error contacting Web3Forms:", {
+        error: errorMsg,
+        endpoint: WEB3FORMS_ENDPOINT,
+        timestamp: new Date().toISOString(),
+      })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unable to process your message at this time. Please try again in a few moments.",
+          code: "SUBMISSION_SERVICE_ERROR",
+        },
+        { status: 503 }
+      )
+    }
 
-    const web3formsResult = await web3formsResponse.json()
+    if (!web3formsResponse.ok) {
+      console.error(
+        `[Contact API] Web3Forms returned status ${web3formsResponse.status}`,
+        {
+          status: web3formsResponse.status,
+          statusText: web3formsResponse.statusText,
+        }
+      )
+
+      let userMessage = "Unable to process your message. Please try again later."
+      if (web3formsResponse.status === 401 || web3formsResponse.status === 403) {
+        userMessage = "Server authentication failed. Please contact support."
+      } else if (web3formsResponse.status === 429) {
+        userMessage = "Too many submissions. Please wait a moment and try again."
+      } else if (web3formsResponse.status >= 500) {
+        userMessage = "The submission service is temporarily unavailable. Please try again in a few moments."
+      }
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: userMessage,
+          code: "SUBMISSION_SERVICE_ERROR",
+        },
+        { status: 503 }
+      )
+    }
+
+    let web3formsResult: any
+    try {
+      web3formsResult = await web3formsResponse.json()
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Unknown error"
+      console.error("[Contact API] Error parsing Web3Forms response:", {
+        error: errorMsg,
+        status: web3formsResponse.status,
+      })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Received invalid response from submission service. Please try again.",
+          code: "RESPONSE_PARSE_ERROR",
+        },
+        { status: 503 }
+      )
+    }
 
     if (!web3formsResult.success) {
-      console.error("[Contact API] Web3Forms submission failed:", web3formsResult)
+      console.error("[Contact API] Web3Forms submission failed:", {
+        response: web3formsResult,
+        senderEmail: email,
+      })
+
       return NextResponse.json(
-        { success: false, message: web3formsResult.message || "Submission failed. Please try again." },
+        {
+          success: false,
+          message: web3formsResult.message || "Your message could not be sent. Please try again.",
+          code: "SUBMISSION_REJECTED",
+        },
         { status: 400 }
       )
     }
@@ -98,9 +213,20 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error("[Contact API] Error:", error)
+    const errorMsg = error instanceof Error ? error.message : "Unknown error"
+    console.error("[Contact API] Unexpected error:", {
+      error: errorMsg,
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
+      stack: error instanceof Error ? error.stack : undefined,
+      clientIp,
+      timestamp: new Date().toISOString(),
+    })
     return NextResponse.json(
-      { success: false, message: "Internal server error. Please try again later." },
+      {
+        success: false,
+        message: "An unexpected error occurred. Please try again later.",
+        code: "INTERNAL_SERVER_ERROR",
+      },
       { status: 500 }
     )
   }

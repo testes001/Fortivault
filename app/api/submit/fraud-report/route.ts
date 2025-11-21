@@ -12,15 +12,45 @@ const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit"
 
 export const runtime = "nodejs"
 
+/**
+ * Validates that critical environment variables are set
+ * Used for redundant checks at request time
+ */
+function validateConfiguration(): { valid: boolean; error?: string } {
+  // Redundant check #1: Direct variable check
+  if (!WEB3FORMS_API_KEY) {
+    return {
+      valid: false,
+      error: "WEB3FORMS_API_KEY is not configured. Contact support if this persists.",
+    }
+  }
+
+  // Redundant check #2: Verify it's not empty after trimming
+  if (!WEB3FORMS_API_KEY.trim()) {
+    return {
+      valid: false,
+      error: "WEB3FORMS_API_KEY is empty. Please provide a valid API key.",
+    }
+  }
+
+  return { valid: true }
+}
+
 export async function POST(request: NextRequest) {
   const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
 
   try {
-    if (!WEB3FORMS_API_KEY) {
-      console.error("[Fraud Report API] Missing WEB3FORMS_API_KEY environment variable")
+    // Redundant configuration check
+    const configCheck = validateConfiguration()
+    if (!configCheck.valid) {
+      console.error("[Fraud Report API] Configuration validation failed:", configCheck.error)
       return NextResponse.json(
-        { success: false, message: "Server configuration error. Please try again later." },
-        { status: 500 }
+        {
+          success: false,
+          message: configCheck.error || "Server is not properly configured. Please try again later.",
+          code: "CONFIG_ERROR",
+        },
+        { status: 503 }
       )
     }
 
@@ -44,9 +74,15 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json()
     } catch (error) {
-      console.error("[Fraud Report API] Error parsing JSON:", error)
+      const errorMsg = error instanceof Error ? error.message : "Unknown parsing error"
+      console.error("[Fraud Report API] Error parsing JSON:", errorMsg)
       return NextResponse.json(
-        { success: false, message: "Invalid JSON payload." },
+        {
+          success: false,
+          message: "Invalid request format. Please ensure you are sending valid JSON.",
+          code: "INVALID_JSON",
+          details: "The request body could not be parsed as JSON.",
+        },
         { status: 400 }
       )
     }
@@ -85,9 +121,25 @@ export async function POST(request: NextRequest) {
     })
 
     if (!validation.valid) {
-      console.error("[Fraud Report API] Validation failed:", validation.errors)
+      console.error("[Fraud Report API] Validation failed:", {
+        errors: validation.errors,
+        providedFields: {
+          fullName: fullName ? "[provided]" : "[missing]",
+          contactEmail: contactEmail ? "[provided]" : "[missing]",
+          scamType: scamType ? "[provided]" : "[missing]",
+          amount: amount ? "[provided]" : "[missing]",
+          currency: currency ? "[provided]" : "[missing]",
+          timeline: timeline ? "[provided]" : "[missing]",
+          description: description ? "[provided]" : "[missing]",
+        },
+      })
       return NextResponse.json(
-        { success: false, errors: validation.errors, message: validation.errors[0] },
+        {
+          success: false,
+          errors: validation.errors,
+          message: validation.errors[0] || "Validation failed",
+          code: "VALIDATION_ERROR",
+        },
         { status: 400 }
       )
     }
@@ -115,20 +167,52 @@ export async function POST(request: NextRequest) {
       web3formsResponse = await fetch(WEB3FORMS_ENDPOINT, {
         method: "POST",
         body: web3formsData,
+        signal: AbortSignal.timeout(10000), // 10 second timeout
       })
     } catch (error) {
-      console.error("[Fraud Report API] Error contacting Web3Forms:", error)
+      const errorMsg = error instanceof Error ? error.message : "Unknown error"
+      console.error("[Fraud Report API] Error contacting Web3Forms:", {
+        error: errorMsg,
+        endpoint: WEB3FORMS_ENDPOINT,
+        timestamp: new Date().toISOString(),
+      })
       return NextResponse.json(
-        { success: false, message: "Unable to submit form. Please try again later." },
-        { status: 500 }
+        {
+          success: false,
+          message: "Unable to process your submission at this time. Please try again in a few moments.",
+          code: "SUBMISSION_SERVICE_ERROR",
+          details: "The form submission service is temporarily unavailable.",
+        },
+        { status: 503 }
       )
     }
 
     if (!web3formsResponse.ok) {
-      console.error(`[Fraud Report API] Web3Forms returned ${web3formsResponse.status}`)
+      console.error(
+        `[Fraud Report API] Web3Forms returned status ${web3formsResponse.status}`,
+        {
+          status: web3formsResponse.status,
+          statusText: web3formsResponse.statusText,
+        }
+      )
+
+      // More specific error messages based on status code
+      let userMessage = "Unable to process your submission. Please try again later."
+      if (web3formsResponse.status === 401 || web3formsResponse.status === 403) {
+        userMessage = "Server authentication failed. Please contact support."
+      } else if (web3formsResponse.status === 429) {
+        userMessage = "Too many submissions. Please wait a moment and try again."
+      } else if (web3formsResponse.status >= 500) {
+        userMessage = "The submission service is temporarily unavailable. Please try again in a few moments."
+      }
+
       return NextResponse.json(
-        { success: false, message: "Submission service unavailable. Please try again later." },
-        { status: 500 }
+        {
+          success: false,
+          message: userMessage,
+          code: "SUBMISSION_SERVICE_ERROR",
+        },
+        { status: 503 }
       )
     }
 
@@ -136,17 +220,34 @@ export async function POST(request: NextRequest) {
     try {
       web3formsResult = await web3formsResponse.json()
     } catch (error) {
-      console.error("[Fraud Report API] Error parsing Web3Forms response:", error)
+      const errorMsg = error instanceof Error ? error.message : "Unknown error"
+      console.error("[Fraud Report API] Error parsing Web3Forms response:", {
+        error: errorMsg,
+        status: web3formsResponse.status,
+      })
       return NextResponse.json(
-        { success: false, message: "Invalid response from submission service." },
-        { status: 500 }
+        {
+          success: false,
+          message: "Received invalid response from submission service. Please try again.",
+          code: "RESPONSE_PARSE_ERROR",
+        },
+        { status: 503 }
       )
     }
 
     if (!web3formsResult.success) {
-      console.error("[Fraud Report API] Web3Forms submission failed:", web3formsResult)
+      console.error("[Fraud Report API] Web3Forms submission failed:", {
+        response: web3formsResult,
+        caseEmail: contactEmail,
+      })
+
+      const errorMessage = web3formsResult.message || "Your submission could not be processed. Please try again."
       return NextResponse.json(
-        { success: false, message: web3formsResult.message || "Submission failed. Please try again." },
+        {
+          success: false,
+          message: errorMessage,
+          code: "SUBMISSION_REJECTED",
+        },
         { status: 400 }
       )
     }
@@ -164,10 +265,20 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error("[Fraud Report API] Unexpected error:", error)
     const errorMsg = error instanceof Error ? error.message : "Unknown error"
+    console.error("[Fraud Report API] Unexpected error:", {
+      error: errorMsg,
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
+      stack: error instanceof Error ? error.stack : undefined,
+      clientIp,
+      timestamp: new Date().toISOString(),
+    })
     return NextResponse.json(
-      { success: false, message: `Internal server error: ${errorMsg}` },
+      {
+        success: false,
+        message: "An unexpected error occurred. Please try again later.",
+        code: "INTERNAL_SERVER_ERROR",
+      },
       { status: 500 }
     )
   }
