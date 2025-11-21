@@ -165,13 +165,14 @@ export function FraudReportingWizard() {
         const errorMessage =
           Array.isArray(result.errors) && result.errors.length > 0
             ? result.errors[0]
-            : result.error || "Submission failed. Please try again later."
+            : result.error || "Submission failed. Please check your information and try again."
         setSubmissionError(errorMessage)
         setIsSubmitting(false)
       }
     } catch (error) {
       console.error("Submission error:", error)
-      setSubmissionError("Network error. Please check your connection and try again.")
+      const errorMsg = error instanceof Error ? error.message : "Network error"
+      setSubmissionError(`${errorMsg}. Please check your connection and try again.`)
       setIsSubmitting(false)
     }
   }
