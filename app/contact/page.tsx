@@ -40,7 +40,7 @@ export default function ContactPage() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch("/api/contact", {
+      const response = await fetch("/api/submit/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -61,10 +61,7 @@ export default function ContactPage() {
         toast.success("Message sent successfully!")
         form.reset()
       } else {
-        const errorMessage =
-          Array.isArray(result.errors) && result.errors.length > 0
-            ? result.errors[0]
-            : result.error || "Submission failed. Please try again later."
+        const errorMessage = result.message || "Submission failed. Please try again later."
         setFormError(errorMessage)
         toast.error(errorMessage)
       }

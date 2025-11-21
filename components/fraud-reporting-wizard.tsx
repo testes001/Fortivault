@@ -160,22 +160,19 @@ export function FraudReportingWizard() {
         formData.append("files", file)
       })
 
-      const response = await fetch("/api/report", {
+      const response = await fetch("/api/submit/fraud-report", {
         method: "POST",
         body: formData,
-        // Don't set Content-Type header - browser will set it with correct boundary
       })
 
       const result = await response.json()
 
-      if (result.success && result.caseId) {
+      if (result.success) {
         setCaseId(result.caseId)
         setIsSubmitted(true)
       } else {
         const errorMessage =
-          Array.isArray(result.errors) && result.errors.length > 0
-            ? result.errors[0]
-            : result.error || "Submission failed. Please check your information and try again."
+          result.message || "Submission failed. Please check your information and try again."
         setSubmissionError(errorMessage)
         setIsSubmitting(false)
       }
