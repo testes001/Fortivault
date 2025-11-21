@@ -1,6 +1,8 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import { CheckCircle, Mail } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
@@ -8,6 +10,7 @@ import { useState, useEffect } from "react"
 interface SuccessStepProps {
   caseId: string
   userEmail: string
+  onSubmitAnother?: () => void
 }
 
 export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
