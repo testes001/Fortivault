@@ -161,5 +161,3 @@ export function DetailsStep({ data, updateData }: DetailsStepProps) {
     </div>
   )
 }
-
-import { useState } from "react"
