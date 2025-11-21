@@ -121,9 +121,25 @@ export async function POST(request: NextRequest) {
     })
 
     if (!validation.valid) {
-      console.error("[Fraud Report API] Validation failed:", validation.errors)
+      console.error("[Fraud Report API] Validation failed:", {
+        errors: validation.errors,
+        providedFields: {
+          fullName: fullName ? "[provided]" : "[missing]",
+          contactEmail: contactEmail ? "[provided]" : "[missing]",
+          scamType: scamType ? "[provided]" : "[missing]",
+          amount: amount ? "[provided]" : "[missing]",
+          currency: currency ? "[provided]" : "[missing]",
+          timeline: timeline ? "[provided]" : "[missing]",
+          description: description ? "[provided]" : "[missing]",
+        },
+      })
       return NextResponse.json(
-        { success: false, errors: validation.errors, message: validation.errors[0] },
+        {
+          success: false,
+          errors: validation.errors,
+          message: validation.errors[0] || "Validation failed",
+          code: "VALIDATION_ERROR",
+        },
         { status: 400 }
       )
     }
