@@ -80,8 +80,22 @@ export async function POST(request: NextRequest) {
     })
 
     if (!validation.valid) {
+      console.error("[Contact API] Validation failed:", {
+        errors: validation.errors,
+        providedFields: {
+          name: name ? "[provided]" : "[missing]",
+          email: email ? "[provided]" : "[missing]",
+          subject: subject ? "[provided]" : "[missing]",
+          message: message ? "[provided]" : "[missing]",
+        },
+      })
       return NextResponse.json(
-        { success: false, errors: validation.errors },
+        {
+          success: false,
+          errors: validation.errors,
+          message: validation.errors[0] || "Validation failed",
+          code: "VALIDATION_ERROR",
+        },
         { status: 400 }
       )
     }
