@@ -13,6 +13,7 @@ import type { WizardData } from "@/components/fraud-reporting-wizard"
 interface TransactionStepProps {
   data: WizardData
   updateData: (updates: Partial<WizardData>) => void
+  showError?: boolean
 }
 
 const isValidTransactionHash = (hash: string): boolean => {
