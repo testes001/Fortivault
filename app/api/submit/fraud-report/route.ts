@@ -220,17 +220,34 @@ export async function POST(request: NextRequest) {
     try {
       web3formsResult = await web3formsResponse.json()
     } catch (error) {
-      console.error("[Fraud Report API] Error parsing Web3Forms response:", error)
+      const errorMsg = error instanceof Error ? error.message : "Unknown error"
+      console.error("[Fraud Report API] Error parsing Web3Forms response:", {
+        error: errorMsg,
+        status: web3formsResponse.status,
+      })
       return NextResponse.json(
-        { success: false, message: "Invalid response from submission service." },
-        { status: 500 }
+        {
+          success: false,
+          message: "Received invalid response from submission service. Please try again.",
+          code: "RESPONSE_PARSE_ERROR",
+        },
+        { status: 503 }
       )
     }
 
     if (!web3formsResult.success) {
-      console.error("[Fraud Report API] Web3Forms submission failed:", web3formsResult)
+      console.error("[Fraud Report API] Web3Forms submission failed:", {
+        response: web3formsResult,
+        caseEmail: contactEmail,
+      })
+
+      const errorMessage = web3formsResult.message || "Your submission could not be processed. Please try again."
       return NextResponse.json(
-        { success: false, message: web3formsResult.message || "Submission failed. Please try again." },
+        {
+          success: false,
+          message: errorMessage,
+          code: "SUBMISSION_REJECTED",
+        },
         { status: 400 }
       )
     }
