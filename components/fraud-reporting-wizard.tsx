@@ -154,8 +154,8 @@ export function FraudReportingWizard() {
       formData.append("bankReferences", JSON.stringify(data.bankReferences))
 
       // Append actual files
-      data.evidenceFiles.forEach((file, index) => {
-        formData.append(`evidenceFile_${index}`, file)
+      data.evidenceFiles.forEach((file) => {
+        formData.append(`evidenceFile_0`, file)
       })
 
       formData.append("filesCount", data.evidenceFiles.length.toString())
