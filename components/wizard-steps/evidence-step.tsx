@@ -212,35 +212,61 @@ export function EvidenceStep({ data, updateData }: EvidenceStepProps) {
       <Card className="border-dashed border-2 border-muted-foreground/25 focus-within:ring-2 focus-within:ring-primary transition-all">
         <CardContent className="p-6">
           <div className="text-center space-y-4">
-            <Upload className="w-12 h-12 mx-auto text-muted-foreground" aria-hidden="true" />
-            <div>
-              <Label htmlFor="file-upload" className="cursor-pointer font-medium">
-                <Button
-                  variant="outline"
-                  asChild
-                  disabled={uploadInProgress}
-                  className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
-                >
-                  <span>{uploadInProgress ? "Uploading..." : "Choose Files"}</span>
-                </Button>
-              </Label>
-              <input
-                id="file-upload"
-                type="file"
-                multiple
-                accept=".jpg,.jpeg,.png,.pdf,.txt,.doc,.docx"
-                onChange={handleFileChange}
-                aria-labelledby="evidence-heading"
-                aria-describedby="file-requirements"
-                disabled={uploadInProgress}
-                className="hidden"
-              />
-            </div>
-            <p id="file-requirements" className="text-sm text-muted-foreground">
-              Supported formats: JPG, PNG, PDF, TXT, DOC, DOCX
-              <br />
-              Max {MAX_FILE_SIZE_MB}MB per file, {MAX_TOTAL_SIZE_MB}MB total
-            </p>
+            {uploadInProgress && fileProgress.length > 0 ? (
+              <div className="space-y-4">
+                <div className="text-sm font-medium text-muted-foreground">Uploading {fileProgress.length} file(s)...</div>
+                {fileProgress.map((fp, index) => (
+                  <div key={index} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="truncate text-muted-foreground">{fp.fileName}</span>
+                      <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">{Math.round(fp.progress)}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary transition-all duration-300"
+                        style={{ width: `${fp.progress}%` }}
+                        role="progressbar"
+                        aria-valuenow={Math.round(fp.progress)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <Upload className="w-12 h-12 mx-auto text-muted-foreground" aria-hidden="true" />
+                <div>
+                  <Label htmlFor="file-upload" className="cursor-pointer font-medium">
+                    <Button
+                      variant="outline"
+                      asChild
+                      disabled={uploadInProgress}
+                      className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+                    >
+                      <span>{uploadInProgress ? "Uploading..." : "Choose Files"}</span>
+                    </Button>
+                  </Label>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.pdf,.txt,.doc,.docx"
+                    onChange={handleFileChange}
+                    aria-labelledby="evidence-heading"
+                    aria-describedby="file-requirements"
+                    disabled={uploadInProgress}
+                    className="hidden"
+                  />
+                </div>
+                <p id="file-requirements" className="text-sm text-muted-foreground">
+                  Supported formats: JPG, PNG, PDF, TXT, DOC, DOCX
+                  <br />
+                  Max {MAX_FILE_SIZE_MB}MB per file, {MAX_TOTAL_SIZE_MB}MB total
+                </p>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
