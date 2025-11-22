@@ -166,16 +166,24 @@ export function FraudReportingWizard() {
         // Browser automatically sets Content-Type: multipart/form-data
       })
 
-      let result: any
       const status = response.status
+      let result: any
 
       try {
-        result = await response.json()
+        const bodyText = await response.text()
+        if (bodyText) {
+          result = JSON.parse(bodyText)
+        } else {
+          // Handle cases where the server returns a 2xx status with an empty body
+          result = { success: status >= 200 && status < 300 }
+        }
       } catch (parseError) {
         console.error("Response parsing error:", parseError)
         result = {
           success: false,
-          message: `Failed to parse server response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`,
+          message: `Failed to parse server response: ${
+            parseError instanceof Error ? parseError.message : "Unknown error"
+          }`,
         }
       }
 
