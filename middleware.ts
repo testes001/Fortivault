@@ -59,6 +59,47 @@ export async function middleware(request: NextRequest) {
         { status: 503 }
       )
     }
+
+    // CSRF Protection: Verify requests come from same origin
+    const origin = request.headers.get("origin")
+    const referer = request.headers.get("referer")
+    const requestUrl = new URL(request.url)
+    const allowedOrigin = requestUrl.origin
+
+    // Allow requests from same origin or with valid referer
+    if (request.method === "POST") {
+      if (origin && origin !== allowedOrigin) {
+        console.warn("[Middleware] CSRF protection: Cross-origin POST blocked", {
+          origin,
+          allowedOrigin,
+          pathname,
+        })
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Request rejected for security reasons.",
+            code: "CSRF_ERROR",
+          },
+          { status: 403 }
+        )
+      }
+
+      if (referer && !referer.startsWith(allowedOrigin)) {
+        console.warn("[Middleware] CSRF protection: Invalid referer", {
+          referer,
+          allowedOrigin,
+          pathname,
+        })
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Request rejected for security reasons.",
+            code: "CSRF_ERROR",
+          },
+          { status: 403 }
+        )
+      }
+    }
   }
 
   // Add security headers
@@ -66,6 +107,7 @@ export async function middleware(request: NextRequest) {
   response.headers.set("X-Content-Type-Options", "nosniff")
   response.headers.set("X-Frame-Options", "DENY")
   response.headers.set("X-XSS-Protection", "1; mode=block")
+  response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 
   return response
 }

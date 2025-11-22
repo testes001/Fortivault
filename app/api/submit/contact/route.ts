@@ -16,6 +16,8 @@ export const runtime = "nodejs"
 
 
 export async function POST(request: NextRequest) {
+  const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
+
   try {
     const configCheck = validateApiKey(WEB3FORMS_API_KEY, "WEB3FORMS_API_KEY")
     if (!configCheck.valid) {
@@ -29,8 +31,6 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       )
     }
-
-    const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
 
     // Apply rate limiting
     if (!rateLimiter.isAllowed(clientIp, RATE_LIMIT_CONFIG)) {
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
         }
       )
 
-      const errorDetails = handleWeb3FormsError(web3formsResponse.status)
+      const errorDetails = handleWeb3FormsError(web3formsResponse.status, "contact-form")
 
       return NextResponse.json(
         {
@@ -149,7 +149,11 @@ export async function POST(request: NextRequest) {
         web3formsResult = await web3formsResponse.json()
       } else {
         const text = await web3formsResponse.text()
-        web3formsResult = text ? JSON.parse(text) : { success: true }
+        if (text && text.trim()) {
+          web3formsResult = JSON.parse(text)
+        } else {
+          web3formsResult = { success: true }
+        }
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Unknown error"

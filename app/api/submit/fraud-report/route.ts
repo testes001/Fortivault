@@ -280,7 +280,7 @@ export async function POST(request: NextRequest) {
         filesSubmitted: files.length,
       })
 
-      const errorDetails = handleWeb3FormsError(web3formsResponse.status)
+      const errorDetails = handleWeb3FormsError(web3formsResponse.status, `files: ${files.length}`)
 
       return NextResponse.json(
         {
@@ -301,7 +301,11 @@ export async function POST(request: NextRequest) {
         web3formsResult = await web3formsResponse.json()
       } else {
         const text = await web3formsResponse.text()
-        web3formsResult = text ? JSON.parse(text) : { success: true }
+        if (text && text.trim()) {
+          web3formsResult = JSON.parse(text)
+        } else {
+          web3formsResult = { success: true }
+        }
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Unknown error"
