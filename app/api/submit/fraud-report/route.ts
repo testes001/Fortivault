@@ -234,8 +234,8 @@ export async function POST(request: NextRequest) {
     web3formsData.append("submittedAt", new Date().toISOString())
 
     // Append actual files to web3forms submission
-    files.forEach((file, index) => {
-      web3formsData.append(`file_${index}`, file, file.name)
+    files.forEach((file) => {
+      web3formsData.append(`attachment`, file, file.name)
     })
 
     // Submit to web3forms with file attachments
