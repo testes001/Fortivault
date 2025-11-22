@@ -15,6 +15,12 @@ interface EvidenceStepProps {
   updateData: (updates: Partial<WizardData>) => void
 }
 
+interface FileProgress {
+  fileName: string
+  progress: number
+  size: number
+}
+
 const ALLOWED_MIME_TYPES = [
   "image/jpeg",
   "image/png",
@@ -30,6 +36,7 @@ const MAX_TOTAL_SIZE_MB = 50
 export function EvidenceStep({ data, updateData }: EvidenceStepProps) {
   const [fileErrors, setFileErrors] = useState<string[]>([])
   const [uploadInProgress, setUploadInProgress] = useState(false)
+  const [fileProgress, setFileProgress] = useState<FileProgress[]>([])
 
   const getTotalFileSize = () => {
     return data.evidenceFiles.reduce((sum, file) => sum + file.size, 0)
