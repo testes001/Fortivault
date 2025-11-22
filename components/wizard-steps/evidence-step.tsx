@@ -42,8 +42,38 @@ export function EvidenceStep({ data, updateData }: EvidenceStepProps) {
     return data.evidenceFiles.reduce((sum, file) => sum + file.size, 0)
   }
 
+  // Validate file MIME type by checking magic bytes (MIME sniffing detection)
+  const validateFileMimeType = async (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const arr = new Uint8Array((reader.result as ArrayBuffer).slice(0, 4))
+        let fileType = ""
+
+        // Check magic bytes for common file types
+        if (arr[0] === 0xFF && arr[1] === 0xD8) {
+          fileType = "image/jpeg" // JPEG
+        } else if (arr[0] === 0x89 && arr[1] === 0x50) {
+          fileType = "image/png" // PNG
+        } else if (arr[0] === 0x25 && arr[1] === 0x50) {
+          fileType = "application/pdf" // PDF
+        } else if (arr[0] === 0xD0 && arr[1] === 0xCF) {
+          fileType = "application/msword" // DOC
+        } else if (arr[0] === 0x50 && arr[1] === 0x4B) {
+          fileType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document" // DOCX
+        } else if (arr[0] < 128) {
+          fileType = "text/plain" // TEXT
+        }
+
+        resolve(!fileType || ALLOWED_MIME_TYPES.includes(fileType))
+      }
+      reader.onerror = () => resolve(false)
+      reader.readAsArrayBuffer(file.slice(0, 4))
+    })
+  }
+
   const handleFileChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
       const newFiles = Array.from(event.target.files || [])
       const errors: string[] = []
 
@@ -62,6 +92,13 @@ export function EvidenceStep({ data, updateData }: EvidenceStepProps) {
 
         if (!validateFileType(file, ALLOWED_MIME_TYPES)) {
           errors.push(`"${file.name}" has an unsupported file type. Allowed: JPG, PNG, PDF, TXT, DOC, DOCX`)
+          continue
+        }
+
+        // Validate MIME type by magic bytes to prevent file type spoofing
+        const mimeValid = await validateFileMimeType(file)
+        if (!mimeValid) {
+          errors.push(`"${file.name}" appears to be a different file type than its extension suggests.`)
           continue
         }
       }
@@ -86,12 +123,47 @@ export function EvidenceStep({ data, updateData }: EvidenceStepProps) {
 
       if (validFiles.length > 0) {
         setUploadInProgress(true)
+        setFileErrors([])
+
+        // Simulate file upload progress
+        const progressStates: FileProgress[] = validFiles.map((file) => ({
+          fileName: file.name,
+          progress: 0,
+          size: file.size,
+        }))
+        setFileProgress(progressStates)
+
+        // Animate progress bars
+        let currentProgress = 0
+        const progressInterval = setInterval(() => {
+          currentProgress += Math.random() * 30
+          if (currentProgress >= 90) {
+            currentProgress = 90
+          }
+
+          setFileProgress((prev) =>
+            prev.map((fp) => ({
+              ...fp,
+              progress: currentProgress,
+            })),
+          )
+
+          if (currentProgress >= 90) {
+            clearInterval(progressInterval)
+          }
+        }, 200)
+
+        // Complete upload after brief delay
         setTimeout(() => {
-          const updatedFiles = [...data.evidenceFiles, ...validFiles]
-          updateData({ evidenceFiles: updatedFiles })
-          setUploadInProgress(false)
-          setFileErrors([])
-        }, 500)
+          setFileProgress((prev) => prev.map((fp) => ({ ...fp, progress: 100 })))
+
+          setTimeout(() => {
+            const updatedFiles = [...data.evidenceFiles, ...validFiles]
+            updateData({ evidenceFiles: updatedFiles })
+            setUploadInProgress(false)
+            setFileProgress([])
+          }, 300)
+        }, 1500)
       }
     },
     [data.evidenceFiles, updateData],
