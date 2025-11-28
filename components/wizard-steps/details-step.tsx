@@ -75,14 +75,24 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
 
   const handleDescriptionChange = (value: string) => {
     updateData({ description: value })
-    if (errors.description && value.trim().length > 0) {
+    const charCount = value.trim().length
+    if (charCount === 0) {
+      setErrors({ ...errors, description: "Description is required" })
+    } else if (charCount < 20) {
+      setErrors({ ...errors, description: "Please provide at least 20 characters" })
+    } else {
       setErrors({ ...errors, description: "" })
     }
   }
 
   const handleDescriptionBlur = (value: string) => {
-    if (!value.trim()) {
+    const charCount = value.trim().length
+    if (charCount === 0) {
       setErrors({ ...errors, description: "Description is required" })
+    } else if (charCount < 20) {
+      setErrors({ ...errors, description: "Please provide at least 20 characters" })
+    } else {
+      setErrors({ ...errors, description: "" })
     }
   }
 
