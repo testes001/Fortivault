@@ -134,7 +134,7 @@ export function FraudReportingWizard() {
     setIsSubmitting(true)
 
     try {
-      // Create FormData payload with file uploads
+      // Create FormData payload
       const formData = new FormData()
 
       // Add form fields
@@ -146,8 +146,14 @@ export function FraudReportingWizard() {
       formData.append("currency", data.currency)
       formData.append("timeline", data.timeline)
       formData.append("description", data.description)
-      formData.append("transactionHashes", JSON.stringify(data.transactionHashes))
-      formData.append("bankReferences", JSON.stringify(data.bankReferences))
+
+      // Append arrays directly to FormData - no JSON serialization needed
+      data.transactionHashes.forEach((hash) => {
+        formData.append("transactionHashes", hash)
+      })
+      data.bankReferences.forEach((ref) => {
+        formData.append("bankReferences", ref)
+      })
 
 
       const response = await fetch("/api/submit/fraud-report", {
