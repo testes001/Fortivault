@@ -1,27 +1,14 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { useState } from "react"
+import { usePathname } from "next/navigation"
 import { useEffect } from "react"
 
 export function PageTransitionLoader() {
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
-    const handleStart = () => {
-      setIsLoading(true)
-    }
-
-    const handleStop = () => {
-      setIsLoading(false)
-    }
-
-    // Use a MutationObserver or polling as a fallback for app router
-    // The best approach is to manually track navigation clicks
-    // We'll set up a global listener for all links
-
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
       const link = target.closest("a")
@@ -43,10 +30,17 @@ export function PageTransitionLoader() {
     }
   }, [])
 
-  // Hide loader after pathname changes
+  // Hide loader after pathname changes (with minimum duration to ensure visibility)
   useEffect(() => {
-    setIsLoading(false)
-  }, [pathname])
+    if (isLoading) {
+      // Keep loader visible for at least 300ms for smooth UX
+      const timer = setTimeout(() => {
+        setIsLoading(false)
+      }, 300)
+
+      return () => clearTimeout(timer)
+    }
+  }, [pathname, isLoading])
 
   if (!isLoading) return null
 
