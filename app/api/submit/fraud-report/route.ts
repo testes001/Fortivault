@@ -110,24 +110,17 @@ export async function POST(request: NextRequest) {
     const description = formData.get("description")?.toString() || ""
     const filesCount = parseInt(formData.get("filesCount")?.toString() || "0", 10)
 
-    // Parse JSON arrays
+    // Extract arrays from FormData (can have multiple values with same key)
     let transactionHashes: string[] = []
     let bankReferences: string[] = []
-    try {
-      const txHashesStr = formData.get("transactionHashes")?.toString() || "[]"
-      transactionHashes = JSON.parse(txHashesStr)
-      const bankRefsStr = formData.get("bankReferences")?.toString() || "[]"
-      bankReferences = JSON.parse(bankRefsStr)
-    } catch (error) {
-      console.error("[Fraud Report API] Error parsing arrays:", error)
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid format for transaction or bank references.",
-          code: "INVALID_ARRAY_FORMAT",
-        },
-        { status: 400 }
-      )
+
+    for (const [key, value] of formData.entries()) {
+      if (key === "transactionHashes" && typeof value === "string") {
+        transactionHashes.push(value)
+      }
+      if (key === "bankReferences" && typeof value === "string") {
+        bankReferences.push(value)
+      }
     }
 
     console.log("[Fraud Report API] Received submission:", {
