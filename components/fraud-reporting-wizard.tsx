@@ -133,75 +133,108 @@ export function FraudReportingWizard() {
 
     setIsSubmitting(true)
 
-    try {
-      // Create FormData payload with file uploads
-      const formData = new FormData()
+    const maxRetries = 2
+    let lastError: Error | null = null
 
-      // Add form fields
-      formData.append("fullName", data.fullName)
-      formData.append("contactEmail", data.contactEmail)
-      formData.append("contactPhone", data.contactPhone)
-      formData.append("scamType", data.scamType)
-      formData.append("amount", data.amount)
-      formData.append("currency", data.currency)
-      formData.append("timeline", data.timeline)
-      formData.append("description", data.description)
-      formData.append("transactionHashes", JSON.stringify(data.transactionHashes))
-      formData.append("bankReferences", JSON.stringify(data.bankReferences))
-
-
-      const response = await fetch("/api/submit/fraud-report", {
-        method: "POST",
-        body: formData,
-        // Browser automatically sets Content-Type: multipart/form-data
-      })
-
-      const status = response.status
-      let result: any
-
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        const bodyText = await response.text()
-        if (bodyText) {
-          result = JSON.parse(bodyText)
+        // Create FormData payload
+        const formData = new FormData()
+
+        // Add form fields
+        formData.append("fullName", data.fullName)
+        formData.append("contactEmail", data.contactEmail)
+        formData.append("contactPhone", data.contactPhone)
+        formData.append("scamType", data.scamType)
+        formData.append("amount", data.amount)
+        formData.append("currency", data.currency)
+        formData.append("timeline", data.timeline)
+        formData.append("description", data.description)
+
+        // Append arrays directly to FormData - no JSON serialization needed
+        data.transactionHashes.forEach((hash) => {
+          formData.append("transactionHashes", hash)
+        })
+        data.bankReferences.forEach((ref) => {
+          formData.append("bankReferences", ref)
+        })
+
+        const response = await fetch("/api/submit/fraud-report", {
+          method: "POST",
+          body: formData,
+          signal: AbortSignal.timeout(30000), // 30 second timeout
+        })
+
+        const status = response.status
+        let result: any
+
+        try {
+          const bodyText = await response.text()
+          if (bodyText) {
+            result = JSON.parse(bodyText)
+          } else {
+            result = { success: status >= 200 && status < 300 }
+          }
+        } catch (parseError) {
+          console.error("Response parsing error:", parseError)
+          result = {
+            success: false,
+            message: `Failed to parse server response: ${
+              parseError instanceof Error ? parseError.message : "Unknown error"
+            }`,
+          }
+        }
+
+        // Check for retryable errors (5xx, timeouts, network issues)
+        if (status >= 500 && attempt < maxRetries) {
+          lastError = new Error(`Server error (${status}). Retrying...`)
+          // Wait before retry with exponential backoff
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
+          continue
+        }
+
+        if (status >= 400) {
+          const errorMessage =
+            result.message || result.errors?.[0] || `Server error: ${status}`
+          throw new Error(errorMessage)
+        }
+
+        if (result.success) {
+          setCaseId(result.caseId)
+          setIsSubmitted(true)
+          setIsSubmitting(false)
+          return
         } else {
-          // Handle cases where the server returns a 2xx status with an empty body
-          result = { success: status >= 200 && status < 300 }
+          const errorMessage =
+            result.message || result.errors?.[0] || "Submission failed. Please check your information and try again."
+          setSubmissionError(errorMessage)
+          setIsSubmitting(false)
+          return
         }
-      } catch (parseError) {
-        console.error("Response parsing error:", parseError)
-        result = {
-          success: false,
-          message: `Failed to parse server response: ${
-            parseError instanceof Error ? parseError.message : "Unknown error"
-          }`,
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error))
+
+        if (attempt === maxRetries) {
+          console.error("Submission error (final attempt):", lastError)
+          let errorMsg = lastError.message || "Network error. Please try again."
+
+          // Provide specific recovery instructions for common errors
+          if (errorMsg.includes("timeout")) {
+            errorMsg = "Submission took too long. Please try again with a stable internet connection."
+          } else if (errorMsg.includes("Network")) {
+            errorMsg = "Network error. Please check your connection and try again."
+          } else if (errorMsg.includes("rate limit") || errorMsg.includes("429")) {
+            errorMsg = "Too many requests. Please wait a moment and try again."
+          }
+
+          setSubmissionError(errorMsg)
+          setIsSubmitting(false)
+          return
         }
-      }
 
-      if (status >= 400) {
-        const errorMessage =
-          result.message || result.errors?.[0] || `Server error: ${status}`
-        throw new Error(errorMessage)
+        // Wait before retry with exponential backoff
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
       }
-
-      if (result.success) {
-        setCaseId(result.caseId)
-        setIsSubmitted(true)
-      } else {
-        const errorMessage =
-          result.message || result.errors?.[0] || "Submission failed. Please check your information and try again."
-        setSubmissionError(errorMessage)
-        setIsSubmitting(false)
-      }
-    } catch (error) {
-      console.error("Submission error:", error)
-      let errorMsg = "Network error"
-
-      if (error instanceof Error) {
-        errorMsg = error.message
-      }
-
-      setSubmissionError(`Submission failed: ${errorMsg}`)
-      setIsSubmitting(false)
     }
   }
 
@@ -223,7 +256,7 @@ export function FraudReportingWizard() {
   }
 
   if (isSubmitted) {
-    return <SuccessStep caseId={caseId} userEmail={data.contactEmail} onSubmitAnother={resetWizard} />
+    return <SuccessStep caseId={caseId} onSubmitAnother={resetWizard} />
   }
 
   const progress = ((currentStep + 1) / steps.length) * 100

@@ -3,17 +3,16 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { CheckCircle, Mail } from "lucide-react"
+import { CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
 
 interface SuccessStepProps {
   caseId: string
-  userEmail: string
   onSubmitAnother?: () => void
 }
 
-export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
+export function SuccessStep({ caseId, onSubmitAnother }: SuccessStepProps) {
   const [isProcessing, setIsProcessing] = useState(true)
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
 
@@ -142,34 +141,16 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
           <div className="bg-muted/50 rounded-lg p-4">
             <p className="text-sm font-medium mb-2">Your Case Reference Number:</p>
             <p className="text-lg font-mono font-bold text-primary">{caseId}</p>
-            <p className="text-xs text-muted-foreground mt-2">Please save this for your records</p>
-          </div>
-
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Mail className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-              <div className="text-left">
-                <h3 className="font-semibold text-primary mb-2">Confirmation Email Sent</h3>
-                <p className="text-sm text-muted-foreground">
-                  We've sent a confirmation email to <strong>{userEmail}</strong> with your case reference number and next steps.
-                </p>
-              </div>
-            </div>
+            <p className="text-xs text-muted-foreground mt-2">Please save this number for your records. You may need it to track your case.</p>
           </div>
 
           <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 text-left">
             <p className="text-sm font-medium text-accent mb-2">What happens next?</p>
             <ul className="text-xs text-muted-foreground space-y-1">
+              <li>• Your case has been securely recorded in our system</li>
               <li>• Your case will be reviewed by our specialists</li>
-              <li>• You'll receive updates via email</li>
               <li>• Additional information may be requested as needed</li>
             </ul>
-          </div>
-
-          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 text-left">
-            <p className="text-sm font-medium text-accent">
-            You will receive a confirmation email. Please reply to that email with any relevant screenshots or evidence for proper handling and investigation.
-            </p>
           </div>
           <div className="flex gap-3 pt-4">
             <Button

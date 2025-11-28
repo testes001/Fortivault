@@ -70,10 +70,6 @@ export function ConfirmationStep({ data, updateData }: ConfirmationStepProps) {
               <Label className="text-sm font-medium">Timeline</Label>
               <p className="text-sm">{data.timeline}</p>
             </div>
-            <div>
-              <Label className="text-sm font-medium">Evidence Files</Label>
-              <p className="text-sm">{data.evidenceFiles.length} files uploaded</p>
-            </div>
           </div>
 
           {data.transactionHashes.length > 0 && (

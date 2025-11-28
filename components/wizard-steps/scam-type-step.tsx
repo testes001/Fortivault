@@ -36,6 +36,14 @@ const scamTypes = [
 export function ScamTypeStep({ data, updateData, showError = false }: ScamTypeStepProps) {
   return (
     <div className="space-y-4">
+      <div>
+        <h3 className="text-lg font-semibold mb-4" id="scam-type-heading">
+          What type of fraud occurred?
+        </h3>
+        <p className="text-muted-foreground">
+          {data.scamType ? "✓ You've selected a scam type" : "Please select the type of fraud that occurred"}
+        </p>
+      </div>
       {showError && (
         <Alert variant="destructive" role="alert">
           <AlertCircle className="h-4 w-4" />

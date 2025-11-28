@@ -75,14 +75,24 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
 
   const handleDescriptionChange = (value: string) => {
     updateData({ description: value })
-    if (errors.description && value.trim().length > 0) {
+    const charCount = value.trim().length
+    if (charCount === 0) {
+      setErrors({ ...errors, description: "Description is required" })
+    } else if (charCount < 20) {
+      setErrors({ ...errors, description: "Please provide at least 20 characters" })
+    } else {
       setErrors({ ...errors, description: "" })
     }
   }
 
   const handleDescriptionBlur = (value: string) => {
-    if (!value.trim()) {
+    const charCount = value.trim().length
+    if (charCount === 0) {
       setErrors({ ...errors, description: "Description is required" })
+    } else if (charCount < 20) {
+      setErrors({ ...errors, description: "Please provide at least 20 characters" })
+    } else {
+      setErrors({ ...errors, description: "" })
     }
   }
 
@@ -114,14 +124,21 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
             aria-labelledby="amount"
             aria-describedby={errors.amount ? "amount-error" : "amount-hint"}
             aria-required="true"
-            className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+            className={`focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all ${
+              errors.amount ? "border-red-500" : data.amount && !errors.amount ? "border-green-500" : ""
+            }`}
           />
           {errors.amount && (
             <p id="amount-error" className="text-sm text-red-500" role="alert">
               {errors.amount}
             </p>
           )}
-          {!errors.amount && (
+          {!errors.amount && data.amount && (
+            <p id="amount-hint" className="text-sm text-green-600 flex items-center gap-1">
+              ✓ Valid amount
+            </p>
+          )}
+          {!errors.amount && !data.amount && (
             <p id="amount-hint" className="text-xs text-muted-foreground">
               Enter the amount greater than 0
             </p>
@@ -136,9 +153,11 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
             <SelectTrigger
               id="currency"
               aria-labelledby="currency"
-              aria-describedby={errors.currency ? "currency-error" : undefined}
+              aria-describedby={errors.currency ? "currency-error" : data.currency ? "currency-hint" : undefined}
               aria-required="true"
-              className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+              className={`focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all ${
+                data.currency && !errors.currency ? "border-green-500" : ""
+              }`}
             >
               <SelectValue placeholder="Select currency" />
             </SelectTrigger>
@@ -155,6 +174,11 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
               {errors.currency}
             </p>
           )}
+          {!errors.currency && data.currency && (
+            <p id="currency-hint" className="text-sm text-green-600 flex items-center gap-1">
+              ✓ Currency selected
+            </p>
+          )}
         </div>
       </div>
 
@@ -166,9 +190,11 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
           <SelectTrigger
             id="timeline"
             aria-labelledby="timeline"
-            aria-describedby={errors.timeline ? "timeline-error" : undefined}
+            aria-describedby={errors.timeline ? "timeline-error" : data.timeline ? "timeline-hint" : undefined}
             aria-required="true"
-            className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+            className={`focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all ${
+              data.timeline && !errors.timeline ? "border-green-500" : ""
+            }`}
           >
             <SelectValue placeholder="Select timeframe" />
           </SelectTrigger>
@@ -185,16 +211,28 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
             {errors.timeline}
           </p>
         )}
+        {!errors.timeline && data.timeline && (
+          <p id="timeline-hint" className="text-sm text-green-600 flex items-center gap-1">
+            ✓ Timeframe selected
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description" className="font-medium">
-          Detailed Description <span className="text-red-500" aria-label="required">*</span>
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="description" className="font-medium">
+            Detailed Description <span className="text-red-500" aria-label="required">*</span>
+          </Label>
+          <span className="text-xs text-muted-foreground" aria-live="polite" aria-atomic="true">
+            {data.description.trim().length} characters
+          </span>
+        </div>
         <Textarea
           id="description"
           placeholder="Please provide a detailed description of what happened, including how you were contacted, what you were promised, and how the fraud occurred..."
-          className="min-h-[120px] focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+          className={`min-h-[120px] focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all ${
+            errors.description ? "border-red-500" : ""
+          }`}
           value={data.description}
           onChange={(e) => handleDescriptionChange(e.target.value)}
           onBlur={(e) => handleDescriptionBlur(e.target.value)}
@@ -207,7 +245,12 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
             {errors.description}
           </p>
         )}
-        {!errors.description && (
+        {!errors.description && data.description.trim().length > 0 && (
+          <p id="description-hint" className="text-sm text-green-600 flex items-center gap-1">
+            ✓ Description looks good
+          </p>
+        )}
+        {!errors.description && data.description.trim().length === 0 && (
           <p id="description-hint" className="text-sm text-muted-foreground">
             Include as much detail as possible. This helps our team understand your case better.
           </p>
