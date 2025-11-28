@@ -12,7 +12,6 @@ import { ScamTypeStep } from "@/components/wizard-steps/scam-type-step"
 import { PersonalDetailsStep } from "@/components/wizard-steps/personal-details-step"
 import { DetailsStep } from "@/components/wizard-steps/details-step"
 import { TransactionStep } from "@/components/wizard-steps/transaction-step"
-import { EvidenceStep } from "@/components/wizard-steps/evidence-step"
 import { ConfirmationStep } from "@/components/wizard-steps/confirmation-step"
 import { SuccessStep } from "@/components/wizard-steps/success-step"
 
@@ -25,7 +24,6 @@ export interface WizardData {
   description: string
   transactionHashes: string[]
   bankReferences: string[]
-  evidenceFiles: File[]
   contactEmail: string
   contactPhone: string
 }
@@ -39,7 +37,6 @@ const initialData: WizardData = {
   description: "",
   transactionHashes: [],
   bankReferences: [],
-  evidenceFiles: [],
   contactEmail: "",
   contactPhone: "",
 }
@@ -49,7 +46,6 @@ const steps = [
   { title: "Personal Details", description: "Provide your contact information" },
   { title: "Details", description: "Provide incident details" },
   { title: "Transactions", description: "Add transaction references" },
-  { title: "Evidence", description: "Upload supporting files" },
   { title: "Confirm", description: "Review and submit" },
 ]
 
@@ -153,12 +149,6 @@ export function FraudReportingWizard() {
       formData.append("transactionHashes", JSON.stringify(data.transactionHashes))
       formData.append("bankReferences", JSON.stringify(data.bankReferences))
 
-      // Append actual files
-      data.evidenceFiles.forEach((file, index) => {
-        formData.append(`evidenceFile_${index}`, file)
-      })
-
-      formData.append("filesCount", data.evidenceFiles.length.toString())
 
       const response = await fetch("/api/submit/fraud-report", {
         method: "POST",
@@ -227,8 +217,6 @@ export function FraudReportingWizard() {
         return true
       case 4:
         return true
-      case 5:
-        return true
       default:
         return false
     }
@@ -287,8 +275,7 @@ export function FraudReportingWizard() {
               {currentStep === 1 && <PersonalDetailsStep data={data} updateData={updateData} showError={showStepError} />}
               {currentStep === 2 && <DetailsStep data={data} updateData={updateData} showError={showStepError} />}
               {currentStep === 3 && <TransactionStep data={data} updateData={updateData} showError={showStepError} />}
-              {currentStep === 4 && <EvidenceStep data={data} updateData={updateData} />}
-              {currentStep === 5 && <ConfirmationStep data={data} updateData={updateData} />}
+              {currentStep === 4 && <ConfirmationStep data={data} updateData={updateData} />}
             </motion.div>
           </AnimatePresence>
 
