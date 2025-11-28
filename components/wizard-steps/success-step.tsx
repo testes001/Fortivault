@@ -9,11 +9,10 @@ import { useState, useEffect } from "react"
 
 interface SuccessStepProps {
   caseId: string
-  userEmail: string
   onSubmitAnother?: () => void
 }
 
-export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
+export function SuccessStep({ caseId, onSubmitAnother }: SuccessStepProps) {
   const [isProcessing, setIsProcessing] = useState(true)
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
 
