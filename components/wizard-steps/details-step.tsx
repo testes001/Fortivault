@@ -153,9 +153,11 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
             <SelectTrigger
               id="currency"
               aria-labelledby="currency"
-              aria-describedby={errors.currency ? "currency-error" : undefined}
+              aria-describedby={errors.currency ? "currency-error" : data.currency ? "currency-hint" : undefined}
               aria-required="true"
-              className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+              className={`focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all ${
+                data.currency && !errors.currency ? "border-green-500" : ""
+              }`}
             >
               <SelectValue placeholder="Select currency" />
             </SelectTrigger>
@@ -170,6 +172,11 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
           {errors.currency && (
             <p id="currency-error" className="text-sm text-red-500" role="alert">
               {errors.currency}
+            </p>
+          )}
+          {!errors.currency && data.currency && (
+            <p id="currency-hint" className="text-sm text-green-600 flex items-center gap-1">
+              ✓ Currency selected
             </p>
           )}
         </div>
