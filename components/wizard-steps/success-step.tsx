@@ -166,6 +166,11 @@ export function SuccessStep({ caseId, userEmail }: SuccessStepProps) {
             </ul>
           </div>
 
+          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 text-left">
+            <p className="text-sm font-medium text-accent">
+            You will receive a confirmation email. Please reply to that email with any relevant screenshots or evidence for proper handling and investigation.
+            </p>
+          </div>
           <div className="flex gap-3 pt-4">
             <Button
               className="flex-1"
