@@ -124,14 +124,21 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
             aria-labelledby="amount"
             aria-describedby={errors.amount ? "amount-error" : "amount-hint"}
             aria-required="true"
-            className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+            className={`focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all ${
+              errors.amount ? "border-red-500" : data.amount && !errors.amount ? "border-green-500" : ""
+            }`}
           />
           {errors.amount && (
             <p id="amount-error" className="text-sm text-red-500" role="alert">
               {errors.amount}
             </p>
           )}
-          {!errors.amount && (
+          {!errors.amount && data.amount && (
+            <p id="amount-hint" className="text-sm text-green-600 flex items-center gap-1">
+              ✓ Valid amount
+            </p>
+          )}
+          {!errors.amount && !data.amount && (
             <p id="amount-hint" className="text-xs text-muted-foreground">
               Enter the amount greater than 0
             </p>
