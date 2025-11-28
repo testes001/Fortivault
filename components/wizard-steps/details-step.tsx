@@ -190,9 +190,11 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
           <SelectTrigger
             id="timeline"
             aria-labelledby="timeline"
-            aria-describedby={errors.timeline ? "timeline-error" : undefined}
+            aria-describedby={errors.timeline ? "timeline-error" : data.timeline ? "timeline-hint" : undefined}
             aria-required="true"
-            className="focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+            className={`focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all ${
+              data.timeline && !errors.timeline ? "border-green-500" : ""
+            }`}
           >
             <SelectValue placeholder="Select timeframe" />
           </SelectTrigger>
@@ -207,6 +209,11 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
         {errors.timeline && (
           <p id="timeline-error" className="text-sm text-red-500" role="alert">
             {errors.timeline}
+          </p>
+        )}
+        {!errors.timeline && data.timeline && (
+          <p id="timeline-hint" className="text-sm text-green-600 flex items-center gap-1">
+            ✓ Timeframe selected
           </p>
         )}
       </div>
