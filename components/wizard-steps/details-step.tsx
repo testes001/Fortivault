@@ -198,13 +198,20 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description" className="font-medium">
-          Detailed Description <span className="text-red-500" aria-label="required">*</span>
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="description" className="font-medium">
+            Detailed Description <span className="text-red-500" aria-label="required">*</span>
+          </Label>
+          <span className="text-xs text-muted-foreground" aria-live="polite" aria-atomic="true">
+            {data.description.trim().length} characters
+          </span>
+        </div>
         <Textarea
           id="description"
           placeholder="Please provide a detailed description of what happened, including how you were contacted, what you were promised, and how the fraud occurred..."
-          className="min-h-[120px] focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+          className={`min-h-[120px] focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all ${
+            errors.description ? "border-red-500" : ""
+          }`}
           value={data.description}
           onChange={(e) => handleDescriptionChange(e.target.value)}
           onBlur={(e) => handleDescriptionBlur(e.target.value)}
@@ -217,7 +224,12 @@ export function DetailsStep({ data, updateData, showError }: DetailsStepProps) {
             {errors.description}
           </p>
         )}
-        {!errors.description && (
+        {!errors.description && data.description.trim().length > 0 && (
+          <p id="description-hint" className="text-sm text-green-600 flex items-center gap-1">
+            ✓ Description looks good
+          </p>
+        )}
+        {!errors.description && data.description.trim().length === 0 && (
           <p id="description-hint" className="text-sm text-muted-foreground">
             Include as much detail as possible. This helps our team understand your case better.
           </p>
